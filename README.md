@@ -4,4 +4,4 @@ Claude skills, one folder each. A folder holds `SKILL.md` plus any `assets/` it 
 
 | Skill | Purpose |
 |---|---|
-| [classic-book-latex](classic-book-latex/) | Typeset documents as a classic trade-book page (Times, Bodoni Bold) |
+| [classic-book-latex](classic-book-latex/) | Typeset documents as a classic trade-book PDF (Times, Bodoni Bold) |
