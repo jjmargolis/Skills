@@ -1,6 +1,6 @@
 ---
 name: classic-book-latex
-description: Typeset any prose document (book, report, essay, memo) as a classic American trade-book page - Times body, Bodoni Bold display, small-caps lead-ins, monochrome charts. Use when a PDF is wanted in this style.
+description: Typeset prose (book, report, essay, memo) as a classic trade-book PDF: Times body, Bodoni Bold display, small-caps lead-ins, monochrome charts. Use when a document is wanted in this style.
 ---
 
 # Classic trade-book interior
@@ -21,11 +21,12 @@ The spec is the source of truth; `assets/tradebook.sty` implements it for XeLaTe
 | Running heads | left page: part title (else document title) in 8 pt letterspaced small caps; right page: chapter title in italic; both centered; folio at outer edge |
 | Block quote | body size, 1.5 pc indent both sides, one blank line above and below |
 | Contents | no leaders; "PART I" small caps hanging left; chapter numbers right-aligned; front matter in italic |
-| Never | bold or underline in text, color, rules, boxes, sans-serif, bullet lists where prose works |
+| Figure | full measure between two 0.4 pt rules; above the image, "FIGURE 1" in 8 pt letterspaced small caps, then a one-sentence italic caption at 10 pt, centered |
+| Never | bold or underline in text, color, boxes, sans-serif, rules other than figure rules, bullet lists where prose works |
 
 ## Build
 
-1. Copy everything in `assets/` beside the new `.tex`. If `assets/` is missing, fetch the files from `https://raw.githubusercontent.com/jjmargolis/Skills/main/classic-book-latex/assets/`.
+1. Copy everything in `assets/` beside the new `.tex`.
 2. Start from `example.tex`; write only the body. Do not add packages or redefine anything in the `.sty`.
 3. Run `xelatex` twice. Render a page to an image and look at it before delivering.
 
@@ -40,7 +41,9 @@ The spec is the source of truth; `assets/tradebook.sty` implements it for XeLaTe
 
 ## Figures and charts
 
-- Full measure, at the top or bottom of a page (`figure` with `[t]` or `[b]`), never wrapped by text.
-- Caption below: `\caption*{\small\itshape ...}`, one sentence, no number.
-- Charts: `import chart_style` (in `assets/`), `fig, ax = chart_style.figure(height=2.5)`, save as PDF. Black and grays only; distinguish series by dash pattern and label them directly at the line ends; no legend box, gridlines, or chart title (the caption is the title).
+- `\exhibit{file}{Caption.}`: the default. Full measure, top of a page (`[b]` for bottom), never wrapped by text.
+- `\plate{file}{Caption.}`: when the figure needs more than half the page height; it takes the next page alone. `\plate[l]{...}{...}` turns that page landscape, for wide figures with fine detail.
+- Figures are numbered automatically. Put `\label{f:x}` inside the caption and cite as `Figure~\ref{f:x}`.
+- Keep at least a page of text between two figure commands, or the first is pushed onto a page of its own.
+- Charts: `import chart_style` (in `assets/`), `fig, ax = chart_style.figure(height=2.5)`, save as PDF. For a landscape plate use `figure(height=3.6, width=7)`. Black and grays only; distinguish series by dash pattern and label them directly at the line ends; no legend box, gridlines, or chart title (the caption is the title).
 - Photographs: grayscale.

@@ -3,7 +3,7 @@
 \ProvidesPackage{tradebook}
 \RequirePackage[paperwidth=6.125in,paperheight=9.25in,textwidth=27pc,lines=39,
   inner=.8in,top=.85in,headsep=1.2pc,headheight=14pt]{geometry}
-\RequirePackage{fontspec,microtype,titletoc,fancyhdr,graphicx,caption}
+\RequirePackage{fontspec,microtype,titletoc,fancyhdr,graphicx,afterpage,pdflscape}
 \RequirePackage[newparttoc]{titlesec}
 
 % ---- type: Times body with old-style figures; Bodoni Bold display
@@ -58,3 +58,18 @@
 % quote: block quotation, 1.5pc each side, one line above and below
 \renewenvironment{quote}{\list{}{\leftmargin1.5pc\rightmargin1.5pc
   \topsep\baselineskip\partopsep0pt\parsep0pt}\item\relax}{\endlist}
+
+% ---- figures (numbered; cite with \label inside the caption and \ref)
+\newcommand\tb@cap[1]{{\centering\refstepcounter{figure}%
+  {\footnotesize\spacedcaps{Figure \thefigure}}\par\vspace{.2pc}{\small\itshape #1\par}}}
+\newcommand\tb@rule{\hrule height .4pt}
+% \exhibit[t|b]{file}{Caption.}: full-measure figure between hairline rules
+\newcommand\exhibit[3][t]{\begin{figure}[#1]\tb@rule\vspace{.6pc}\tb@cap{#3}\vspace{.6pc}
+  \centering\includegraphics[width=\textwidth]{#2}\par\vspace{.5pc}\tb@rule\end{figure}}
+% \plate{file}{Caption.}: figure on the next page by itself; \plate[l] turns that page landscape
+\newcommand\tb@plate[2]{\thispagestyle{empty}\vspace*{\fill}\noindent\begin{minipage}{\linewidth}
+  \tb@rule\vspace{.6pc}\tb@cap{#2}\vspace{.6pc}\centering
+  \includegraphics[width=\linewidth,height=\dimexpr\textheight-6pc\relax,keepaspectratio]{#1}%
+  \par\vspace{.5pc}\tb@rule\end{minipage}\vspace*{\fill}}
+\newcommand\plate[3][p]{\afterpage{\if l#1\begin{landscape}\tb@plate{#2}{#3}\end{landscape}%
+  \else\clearpage\tb@plate{#2}{#3}\clearpage\fi}}
