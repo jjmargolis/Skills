@@ -1,6 +1,6 @@
 ---
-name: carovision
-description: Typeset prose (book, report, essay, memo) as a classic trade-book PDF: Times body, Bodoni Bold display, small-caps lead-ins, monochrome charts. Use when a document is wanted in this style.
+name: "carovision"
+description: "Typeset prose (book, report, essay, memo) as a classic trade-book PDF: Times body, Bodoni Bold display, small-caps lead-ins, monochrome charts. Use when a document is wanted in this style."
 ---
 
 # Classic trade-book interior
