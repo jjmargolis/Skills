@@ -1,5 +1,5 @@
 ---
-name: classic-book-latex
+name: carovision
 description: Typeset prose (book, report, essay, memo) as a classic trade-book PDF: Times body, Bodoni Bold display, small-caps lead-ins, monochrome charts. Use when a document is wanted in this style.
 ---
 
@@ -27,7 +27,7 @@ The spec is the source of truth; the package below implements it for XeLaTeX. Fo
 
 ## Build
 
-1. Save the Package block as `tradebook.sty` beside the new `.tex`.
+1. Save the Package block as `carovision.sty` beside the new `.tex`.
 2. Get the display font into the same folder (without it headings fall back to Times Bold, with a warning; tell the user):
    ```bash
    curl -sLo vf.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/librebodoni/LibreBodoni%5Bwght%5D.ttf"
@@ -67,7 +67,7 @@ mpl.rcParams.update({"font.family": "TeX Gyre Termes", "font.size": 9, "axes.lin
 
 ```latex
 \documentclass[11pt,twoside,openright]{book}
-\usepackage{tradebook}
+\usepackage{carovision}
 \begin{document}
 \frontmatter
 \tableofcontents
@@ -93,8 +93,8 @@ Text resumes, citing Figure~\ref{f:a}.
 ## Package
 
 ```latex
-% tradebook.sty -- compile with xelatex
-\ProvidesPackage{tradebook}
+% carovision.sty -- compile with xelatex
+\ProvidesPackage{carovision}
 \RequirePackage[paperwidth=6.125in,paperheight=9.25in,textwidth=27pc,lines=39,
   inner=.8in,top=.85in,headsep=1.2pc,headheight=14pt]{geometry}
 \RequirePackage{fontspec,microtype,titletoc,fancyhdr,graphicx,afterpage,pdflscape}
@@ -105,7 +105,7 @@ Text resumes, citing Figure~\ref{f:a}.
   BoldFont=*-bold,BoldItalicFont=*-bolditalic,Numbers=OldStyle]
 \IfFontExistsTF{LibreBodoni-Bold.ttf}
   {\newfontfamily\display{LibreBodoni-Bold.ttf}[WordSpace=1.5]}
-  {\PackageWarningNoLine{tradebook}{LibreBodoni-Bold.ttf not found; using Times Bold}%
+  {\PackageWarningNoLine{carovision}{LibreBodoni-Bold.ttf not found; using Times Bold}%
    \newcommand\display{\bfseries}}
 \newcommand\spacedcaps[1]{{\addfontfeature{LetterSpace=18}\textsc{\MakeLowercase{#1}}}}
 \raggedbottom
