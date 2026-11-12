@@ -8,10 +8,7 @@
 % type
 \setmainfont{texgyretermes}[Extension=.otf,UprightFont=*-regular,ItalicFont=*-italic,
   BoldFont=*-bold,BoldItalicFont=*-bolditalic,Numbers=OldStyle]
-\IfFontExistsTF{LibreBodoni-Bold.ttf}
-  {\newfontfamily\display{LibreBodoni-Bold.ttf}[WordSpace=1.5]}
-  {\PackageWarningNoLine{carovision}{LibreBodoni-Bold.ttf not found; using Times Bold}%
-   \newcommand\display{\bfseries}}
+\newfontfamily\display{LibreBodoni-Bold.ttf}[WordSpace=1.5]
 \newcommand\spacedcaps[1]{{\addfontfeature{LetterSpace=18}\textsc{\MakeLowercase{#1}}}}
 \raggedbottom
 

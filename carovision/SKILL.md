@@ -27,14 +27,9 @@ The spec is the source of truth; `carovision.sty` in this skill's folder impleme
 
 ## Build
 
-1. Copy `carovision.sty` from this skill's folder to beside the new `.tex`.
-2. Get the display font into the same folder (without it headings fall back to Times Bold, with a warning; tell the user):
-   ```bash
-   curl -sLo vf.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/librebodoni/LibreBodoni%5Bwght%5D.ttf"
-   python3 -m fontTools.varLib.instancer vf.ttf wght=700 -o LibreBodoni-Bold.ttf  # pip install fonttools
-   ```
-3. Write the document from the Example. Do not add packages or redefine anything.
-4. Run `xelatex` twice. Render a page to an image and look at it before delivering.
+1. Copy `carovision.sty` and `LibreBodoni-Bold.ttf` from this skill's folder to beside the new `.tex`.
+2. Write the document from the Example. Do not add packages or redefine anything.
+3. Run `xelatex` twice. Render a page to an image and look at it before delivering.
 
 ## Commands
 
