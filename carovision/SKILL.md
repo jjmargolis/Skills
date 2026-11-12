@@ -90,5 +90,4 @@ Text resumes, citing Figure~\ref{f:a}.
 \end{document}
 ```
 
-
 The titletoc warning `Unknown TOC type front` is expected.
