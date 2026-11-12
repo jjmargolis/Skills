@@ -1,6 +1,6 @@
 # BPMN 2.0.2, distilled
 
-Source: OMG *Business Process Model and Notation*, v2.0.2, formal/2013-12-09 (`formal-13-12-09.PDF`, 532 pages). Every statement below comes from that PDF, all 532 pages of which were read for this file; nothing is from memory. `(§x, p.n)` = spec clause and printed page. `(fig)` = taken from a figure because the text does not say it. Where the spec contradicts itself, both readings are in §14 and flagged `[!]` inline.
+Source: OMG *Business Process Model and Notation*, v2.0.2, formal/2013-12-09 (`../source/formal-13-12-09.PDF`, 532 pages). Every statement below comes from that PDF, all 532 pages of which were read for this file; nothing is from memory. `(§x, p.n)` = spec clause and printed page. `(fig)` = taken from a figure because the text does not say it. Where the spec contradicts itself, both readings are in §14 and flagged `[!]` inline.
 
 Notation here: `attr: Type [mult] = default`. MUST/MAY carry their RFC 2119 meaning, as in the spec. SF = Sequence Flow, MF = Message Flow.
 
