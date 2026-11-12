@@ -47,12 +47,12 @@ Commands assume a Linux shell with pdfLaTeX, poppler-utils and Python 3.
 ```bash
 pdflatex -interaction=nonstopmode F.tex >/dev/null   # equal-height boxes settle on the second run
 pdflatex -interaction=nonstopmode F.tex | grep -E "Output written|^! |Overfull"
-pdftoppm -png -r 80 F.pdf preview   # Read the PNG and look at it
+pdftoppm -png -r 80 F.pdf preview   # look at the PNG
 ```
 Layout pass: 1 page, no errors, no overlaps or clipping.
 
 **Alignment pass** (do this every time; it's where pages look amateur):
-1. Compile once with `\usepackage{showframe}` added, render at `-r 150`, and Read it. The frame shows the true text block; nothing should poke outside it (chart tick labels and box borders are the usual offenders). Remove `showframe` after.
+1. Compile once with `\usepackage{showframe}` added, render at `-r 150`, and look at it. The frame shows the true text block; nothing should poke outside it (chart tick labels and box borders are the usual offenders). Remove `showframe` after.
 2. Measure edges instead of eyeballing them, with `check.py` from this skill's folder:
 ```bash
 python3 check.py F.pdf
@@ -68,4 +68,4 @@ It prints the page count, then how many text blocks start at each left edge (x) 
 
 **Clarity pass:** the questions at the end of the mode file.
 
-Iterate until all three passes are clean. Send with SendUserFile (`display: render`). Reply in a few lines: the one sentence, memory vs. sources, and one honest trade-off.
+Iterate until all three passes are clean. Deliver the PDF so the user can open it. Reply in a few lines: the one sentence, memory vs. sources, and one honest trade-off.
