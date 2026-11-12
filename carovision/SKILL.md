@@ -29,7 +29,14 @@ The spec is the source of truth; `carovision.sty` in this skill's folder impleme
 
 1. Copy `carovision.sty` and `LibreBodoni-Bold.ttf` from this skill's folder to beside the new `.tex`.
 2. Write the document from the Example. Do not add packages or redefine anything.
-3. Run `xelatex` twice. Render a page to an image and look at it before delivering.
+3. Compile twice, then render the pages and look at them before delivering:
+   ```bash
+   xelatex -interaction=nonstopmode F.tex | grep -E "Output written|^! |Overfull"
+   pdftoppm -png -r 80 F.pdf page
+   ```
+   Fix an `Overfull` line by rewording it or adding a `\-` hyphenation point.
+
+Commands assume a Linux shell with XeLaTeX, poppler-utils and Python 3.
 
 ## Commands
 
