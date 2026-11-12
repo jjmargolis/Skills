@@ -20,24 +20,30 @@ No fake textbook labels (chapter/figure numbers, running heads) unless asked. Wr
 - At simpler levels, say in one line what nuance was sacrificed.
 
 ## Build
-LaTeX + pgfplots/TikZ. Preamble basics: `geometry` (0.6–0.8in margins), `mathpazo` or `helvet` (sans), `microtype`, `amsmath`, `xcolor`, `pgfplots` + `fillbetween`, `tcolorbox` for a boxed claim, `enumitem` with `nosep`, `\pagestyle{empty}`, `\parindent 0pt`.
+LaTeX + pgfplots/TikZ. Copy `onepager.sty` from this skill's folder to beside the `.tex` and start from:
+```latex
+\documentclass[11pt]{article}  % 10pt graduate, 11pt undergraduate, 12pt ELI5
+\usepackage{onepager}          % [sans] for ELI5
+```
+The package sets 0.7in margins (`\geometry{margin=...}` to move within 0.6–0.8in), no page number and no paragraph indent. It puts text, math and chart labels in one family (Palatino, or Helvetica with `sans`) and loads `amsmath`, `xcolor`, `pgfplots` + `fillbetween`, `tcolorbox` with `tcbraster`, `booktabs`, `siunitx` and `enumitem` with `nosep`. A character the font lacks is a compile error. Add no other font package.
 
 Layout that works:
 - Text beside chart: two top-aligned `minipage`s (`[t]{0.52\textwidth}` / `[t]{0.45\textwidth}`, each beginning with `\vspace{0pt}`), chart `width=\linewidth`. Avoid `wrapfig`.
 - If curve labels collide, use a legend below the axis and `forget plot` on fills.
-- Draw ELI5 icons as simple TikZ shapes; avoid symbols from unloaded packages (they render blank). Keep full-width banners within the panels' x-range.
+- Draw ELI5 icons as simple TikZ shapes. Keep full-width banners within the panels' x-range.
 
 Build for alignment from the start (cheaper than fixing it later):
-- **One spacing scale.** Define `\newlength\gap \setlength\gap{6pt}` (and at most `\biggap = 2\gap`) and use only those between blocks. No ad-hoc `\vspace{3.5pt}`.
+- **One spacing scale.** Use only `\vspace{\gap}` (6pt) and `\vspace{\biggap}` (12pt) between blocks. No ad-hoc `\vspace{3.5pt}`.
 - **Charts flush to the text edge.** pgfplots puts tick labels *outside* `width`, so the visible chart overhangs its column. Use `scale only axis` with a width that leaves room for labels, or wrap the `tikzpicture` with `trim axis left`/`trim axis right` so the axis line sits on the column edge.
 - **Boxes match the text block.** `tcolorbox` with `width=\linewidth` and `left skip=0pt, right skip=0pt`; text inside the box uses the same font size as body unless it's the boxed claim.
 - **Fixed gutter.** Columns are separated by one `\hfill` with widths summing to ≤ 0.97\textwidth; every row of columns/panels uses the same widths.
 - **Equal-height panels** (ELI5 step panels): `tcbraster` with `raster equal height`, not hand-tuned `\vspace`.
-- **Chart text matches body.** `every axis label/.style={font=\small}`, tick labels `\footnotesize`; same font family as the page.
+- **Chart text matches body.** The package sets axis labels `\small` and tick labels `\footnotesize` in the page's family; leave them.
 
 ## Check, then deliver
 Commands assume a Linux shell with pdfLaTeX, poppler-utils and Python 3.
 ```bash
+pdflatex -interaction=nonstopmode F.tex >/dev/null   # equal-height boxes settle on the second run
 pdflatex -interaction=nonstopmode F.tex | grep -E "Output written|^! |Overfull"
 pdftoppm -png -r 80 F.pdf preview   # Read the PNG and look at it
 ```

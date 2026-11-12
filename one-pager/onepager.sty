@@ -1,0 +1,43 @@
+% onepager.sty -- compile with pdflatex
+% \usepackage{onepager}        serif page (graduate, undergraduate)
+% \usepackage[sans]{onepager}  sans page (ELI5)
+\ProvidesPackage{onepager}
+\newif\ifop@sans
+\DeclareOption{sans}{\op@sanstrue}
+\ProcessOptions\relax
+
+% a character the font lacks is a compile error, not a blank on the page
+\tracinglostchars=3
+
+% page
+\RequirePackage[margin=0.7in]{geometry}
+\pagestyle{empty}
+\setlength\parindent{0pt}
+
+% type: text and math (so chart tick labels too) in one family
+\RequirePackage[T1]{fontenc}
+\RequirePackage{amsmath}
+\ifop@sans
+  \RequirePackage[scaled=.92]{helvet}
+  \RequirePackage[helvet]{sfmath}
+  \renewcommand\familydefault{\sfdefault}
+\else
+  \RequirePackage{mathpazo}
+\fi
+\RequirePackage{microtype}
+
+% charts, boxes, tables, lists
+\RequirePackage{xcolor}
+\RequirePackage{pgfplots}
+\usepgfplotslibrary{fillbetween}
+\pgfplotsset{compat=1.18,
+  every axis label/.append style={font=\small},
+  every tick label/.append style={font=\footnotesize}}
+\RequirePackage[most]{tcolorbox}
+\RequirePackage{booktabs,siunitx}
+\RequirePackage{enumitem}
+\setlist{nosep}
+
+% the one spacing scale: \vspace{\gap} or \vspace{\biggap} between blocks
+\newlength\gap    \setlength\gap{6pt}
+\newlength\biggap \setlength\biggap{2\gap}
