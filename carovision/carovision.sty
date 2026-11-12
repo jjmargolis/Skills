@@ -1,0 +1,67 @@
+% carovision.sty -- compile with xelatex
+\ProvidesPackage{carovision}
+\RequirePackage[paperwidth=6.125in,paperheight=9.25in,textwidth=27pc,lines=39,
+  inner=.8in,top=.85in,headsep=1.2pc,headheight=14pt]{geometry}
+\RequirePackage{fontspec,microtype,titletoc,fancyhdr,graphicx,afterpage,pdflscape}
+\RequirePackage[newparttoc]{titlesec}
+
+% type
+\setmainfont{texgyretermes}[Extension=.otf,UprightFont=*-regular,ItalicFont=*-italic,
+  BoldFont=*-bold,BoldItalicFont=*-bolditalic,Numbers=OldStyle]
+\IfFontExistsTF{LibreBodoni-Bold.ttf}
+  {\newfontfamily\display{LibreBodoni-Bold.ttf}[WordSpace=1.5]}
+  {\PackageWarningNoLine{carovision}{LibreBodoni-Bold.ttf not found; using Times Bold}%
+   \newcommand\display{\bfseries}}
+\newcommand\spacedcaps[1]{{\addfontfeature{LetterSpace=18}\textsc{\MakeLowercase{#1}}}}
+\raggedbottom
+
+% running heads
+\pagestyle{fancy}\fancyhf{}\renewcommand\headrulewidth{0pt}
+\fancyhead[CE]{\edef\tb@l{\leftmark}\ifx\tb@l\empty\textit{\rightmark}\else
+  {\footnotesize\spacedcaps{\leftmark}}\fi}
+\fancyhead[CO]{\textit{\rightmark}}\fancyhead[LE,RO]{\thepage}
+\renewcommand\chaptermark[1]{\markright{#1}}\markboth{}{}
+
+% part and chapter
+\newcommand\tb@part[1]{\markboth{#1}{}\MakeUppercase{#1}}
+\titleclass{\part}{page}\assignpagestyle{\part}{empty}
+\titleformat{\part}[display]{\display\centering}{\LARGE Part\enspace\thepart}{2.5pc}
+  {\Huge\addfontfeature{LetterSpace=12}\tb@part}
+\titlespacing*{\part}{0pt}{7pc}{0pt}
+\assignpagestyle{\chapter}{empty}
+\titleformat{\chapter}[display]{\display\centering}{\LARGE\thechapter}{2.2pc}{\huge}
+\titlespacing*{\chapter}{0pt}{2pc}{3.5pc}
+
+% contents
+\newcommand\tb@lab[1]{\makebox[0pt][r]{#1\hspace{1pc}}}
+\newcommand\tb@pg{\hfill\thecontentspage\hspace*{2pc}}
+\contentsmargin{0pt}
+\titlecontents{part}[6pc]{\addvspace{.9pc}}
+  {\tb@lab{\textsc{part\enspace\MakeLowercase{\thecontentslabel}}}\MakeUppercase}
+  {\MakeUppercase}{\tb@pg}[\vspace{.2pc}]
+\titlecontents{chapter}[6pc]{}{\tb@lab{\thecontentslabel}}{}{\tb@pg}
+\titlecontents{front}[6pc]{\itshape}{}{}{\tb@pg}[\vspace{.3pc}]
+\let\tb@toc\tableofcontents\renewcommand\tableofcontents{\tb@toc\markboth{}{Contents}}
+
+% text
+\newcommand\front[1]{\chapter*{#1}\markright{#1}\addcontentsline{toc}{front}{#1}}
+\newcommand\lead[1]{\noindent{\addfontfeature{LetterSpace=4}\textsc{#1}}}
+\newcommand\scene{\@ifstar\tb@major\tb@minor}
+\newcommand\tb@minor[1]{\par\vspace{2\baselineskip}\lead{#1}}
+\newcommand\tb@major[1]{\par\vspace{1.4\baselineskip}{\centering\rule{5pc}{.4pt}\par}%
+  \vspace{1.4\baselineskip}\lead{#1}}
+\renewenvironment{quote}{\list{}{\leftmargin1.5pc\rightmargin1.5pc
+  \topsep\baselineskip\partopsep0pt\parsep0pt}\item\relax}{\endlist}
+
+% figures
+\counterwithout{figure}{chapter}
+\newcommand\tb@rule{\hrule height .4pt}
+\newcommand\exhibit[3][t]{\begin{figure}[#1]\tb@rule\vspace{.6pc}{\centering
+  \refstepcounter{figure}{\footnotesize\spacedcaps{Figure \thefigure}}\par\vspace{.2pc}
+  {\small\itshape #3\par}\vspace{.6pc}\includegraphics[width=\textwidth]{#2}\par}%
+  \vspace{.5pc}\tb@rule\end{figure}}
+\newcommand\tb@plate[2]{\thispagestyle{empty}{\centering\includegraphics[width=\linewidth,
+  height=\dimexpr\textheight-6pc\relax,keepaspectratio]{#1}\par}\vspace{.6pc}%
+  \noindent\hfill\begin{minipage}[t]{14pc}\raggedright\small\itshape #2\end{minipage}}
+\newcommand\plate[3][p]{\afterpage{\if l#1\begin{landscape}\tb@plate{#2}{#3}\end{landscape}%
+  \else\clearpage\tb@plate{#2}{#3}\clearpage\fi}}
