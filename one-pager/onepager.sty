@@ -1,4 +1,4 @@
-% onepager.sty -- compile with pdflatex
+% onepager.sty -- compile with pdflatex; xelatex for non-Latin scripts
 % \usepackage{onepager}        serif page (graduate, undergraduate)
 % \usepackage[sans]{onepager}  sans page (ELI5)
 \ProvidesPackage{onepager}
@@ -14,15 +14,21 @@
 \pagestyle{empty}
 \setlength\parindent{0pt}
 
-% type: text and math (so chart tick labels too) in one family
-\RequirePackage[T1]{fontenc}
+% type: text and math (so chart tick labels too) in one family.
+% Under xelatex the document picks the font with \setmainfont.
+\RequirePackage{iftex}
 \RequirePackage{amsmath}
-\ifop@sans
-  \RequirePackage[scaled=.92]{helvet}
-  \RequirePackage[helvet]{sfmath}
-  \renewcommand\familydefault{\sfdefault}
+\ifPDFTeX
+  \RequirePackage[T1]{fontenc}
+  \ifop@sans
+    \RequirePackage[scaled=.92]{helvet}
+    \RequirePackage[helvet]{sfmath}
+    \renewcommand\familydefault{\sfdefault}
+  \else
+    \RequirePackage{mathpazo}
+  \fi
 \else
-  \RequirePackage{mathpazo}
+  \RequirePackage{fontspec}
 \fi
 \RequirePackage{microtype}
 

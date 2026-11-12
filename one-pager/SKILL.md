@@ -27,6 +27,8 @@ LaTeX + pgfplots/TikZ. Copy `onepager.sty` from this skill's folder to beside th
 ```
 The package sets 0.7in margins (`\geometry{margin=...}` to move within 0.6–0.8in), no page number and no paragraph indent. It puts text, math and chart labels in one family (Palatino, or Helvetica with `sans`) and loads `amsmath`, `xcolor`, `pgfplots` + `fillbetween`, `tcolorbox` with `tcbraster`, `booktabs`, `siunitx` and `enumitem` with `nosep`. A character the font lacks is a compile error. Add no other font package.
 
+For a language outside Latin script, compile with `xelatex` instead of `pdflatex`. The package then loads `fontspec`, and the document names a font that covers the script: `\setmainfont{...}` (add `polyglossia` for right-to-left scripts).
+
 Layout that works:
 - Text beside chart: two top-aligned `minipage`s (`[t]{0.52\textwidth}` / `[t]{0.45\textwidth}`, each beginning with `\vspace{0pt}`), chart `width=\linewidth`. Avoid `wrapfig`.
 - If curve labels collide, use a legend below the axis and `forget plot` on fills.
