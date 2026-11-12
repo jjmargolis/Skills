@@ -13,3 +13,5 @@ Claude skills, one folder each. The copy saved in the Claude account is the one 
 | [political-spectrum-heatmap](political-spectrum-heatmap/) | Sourced chart of where voter guides agree and disagree on a ballot |
 
 The OMG BPMN 2.0.2 spec that `bpmn/spec.md` was distilled from is in [bpmn-skills/source/](bpmn-skills/source/). It is a source, not part of any skill.
+
+Packaged copies of carovision and one-pager, ready to upload to the Claude account, are in [dist/](dist/).
