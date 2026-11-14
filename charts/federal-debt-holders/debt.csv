@@ -1,7 +1,8 @@
 # title: US Federal Debt, as of 31 March 2025
 # subtitle: Total public debt outstanding of $36.21tn at 31 March 2025, the latest quarter for which Treasury has published holdings by every class of investor.
-# source: Treasury Bulletin Sept 2025 Table OFS-2; Monthly Statement of the Public Debt, Tables I and III; TIC major foreign holders
+# source: Treasury Bulletin Sept 2025 Table OFS-2; Federal Reserve Z.1 (12 June 2025) Table L.210; Monthly Statement of the Public Debt, Tables I and III; TIC major foreign holders
 # source_url: https://fiscal.treasury.gov/system/files/files/reports-statements/treasury-bulletin/2025/b2025-3.pdf
+# source_url: https://www.federalreserve.gov/releases/z1/20250612/html/l210.htm
 # source_url: https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/debt/mspd/mspd_table_1?filter=record_date:eq:2025-03-31
 # source_url: https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/debt/mspd/mspd_table_3_nonmarket?filter=record_date:eq:2025-03-31
 # source_url: https://ticdata.treasury.gov/resource-center/data-chart-center/tic/Documents/mfhhis01.txt
@@ -10,11 +11,15 @@
 # scale: 1e9
 # units: billions of dollars; OFS-2 and TIC as published, MSPD converted from millions
 # derived: Federal Reserve 4218.8 = OFS-2 Federal Reserve and Government accounts 11523.6 less MSPD intragovernmental holdings 7304.8; Treasury publishes only the combined figure
+# domestic: OFS-2 categories split by the Z.1 L.210 sectors they are built from; mutual funds 4421.3 = money market 2880.6 + mutual 1538.8 + closed-end 2.0; depository institutions 1878.1 = U.S.-chartered 1545.5 + holding companies 137.3 + foreign banking offices 108.2 + credit unions 63.3 + U.S.-affiliated areas 23.8; insurance 622.9 = property-casualty 432.0 + life 190.9; private pensions 470.8 = defined contribution 250.8 + defined benefit 220.1; state and local governments 1700.0 = Z.1 marketable excluding SLGS 1613.5 + MSPD SLGS 86.5
+# derived: OFS-2 other investors 5891.0 less Z.1 households 2859.0, ETFs 605.3, brokers and dealers 487.6, GSEs 232.3, nonfinancial corporate 123.3, noncorporate 87.2, central clearing 83.4, ABS issuers 25.1, federal retirement funds 20.4, and MSPD other nonmarketable held by the public 101.1 (domestic series 13.7 + government account series 82.6 + other 4.8) leaves 1266.3 with no identified holder
+# rounding: Z.1 prints one decimal, so money market + mutual + closed-end is 4421.4 against OFS-2 4421.3, and private pensions 470.9 against 470.8; domestic private sums to 15641.3, 0.2 over OFS-2
+# foreign_official: TIC March 2025 foreign official 3923.4 (bills 419.8, bonds and notes 3503.6) of 9052.0; TIC doesn't publish official holdings by country, so the chart groups foreign holders by region only
 # omitted: 7 government funds that MSPD reports as zero or under $500,000
 # folded: within each government-account program, funds under $5bn are one cell, "Smaller funds (N)"; every fund and its program is in government-accounts.csv
 # regions: TIC attributes holdings to the country where the securities are held in custody, so custody centres (Belgium, Luxembourg, Cayman Islands) appear large
-# reconciliation: foreign 9052.0 + domestic private 15641.1 + Federal Reserve 4218.8 + government accounts 7304.8 = 36216.7; published total public debt 36214.3 (MSPD 36214.3)
-# difference: +2.4, because TIC has since revised March 2025 foreign holdings to 9052.0 from the 9049.5 printed in OFS-2
+# reconciliation: foreign 9052.0 + domestic private 15641.3 + Federal Reserve 4218.8 + government accounts 7304.8 = 36216.9; published total public debt 36214.3 (MSPD 36214.3)
+# difference: +2.6; TIC has since revised March 2025 foreign holdings to 9052.0 from the 9049.5 printed in OFS-2 (+2.5), Z.1 prints one decimal (+0.2), and the published figures round (-0.1)
 group,subgroup,label,value
 Foreign and international holders,Asia and Pacific,Japan,1135.1
 Foreign and international holders,Europe,United Kingdom,779.2
@@ -53,14 +58,32 @@ Foreign and international holders,Americas,Peru,42.8
 Foreign and international holders,Americas,Colombia,47.3
 Foreign and international holders,Americas,Chile,37.1
 Foreign and international holders,All other countries,All other countries,650.9
-Domestic private investors,Funds and institutions,Mutual funds,4421.3
-Domestic private investors,Individuals and others,Other investors,5891
-Domestic private investors,Funds and institutions,Depository institutions,1878.1
-Domestic private investors,State and local,State and local governments,1700
-Domestic private investors,Funds and institutions,Insurance companies,622.9
-Domestic private investors,State and local,State and local government pension funds,502
-Domestic private investors,Funds and institutions,Private pension funds,470.8
-Domestic private investors,Individuals and others,U.S. savings bonds,155
+Domestic private investors,Funds,Money market funds,2880.6
+Domestic private investors,Funds,Mutual and closed-end funds,1540.8
+Domestic private investors,Funds,Exchange-traded funds,605.3
+Domestic private investors,Banks,U.S.-chartered banks,1545.5
+Domestic private investors,Banks,Bank holding companies,137.3
+Domestic private investors,Banks,Foreign banks' U.S. offices,108.2
+Domestic private investors,Banks,Credit unions,63.3
+Domestic private investors,Banks,Banks in U.S. territories,23.8
+Domestic private investors,Insurers,Property-casualty insurers,432
+Domestic private investors,Insurers,Life insurers,190.9
+Domestic private investors,Pensions,State and local government pensions,502
+Domestic private investors,Pensions,Private defined-contribution plans,250.8
+Domestic private investors,Pensions,Private defined-benefit plans,220.1
+Domestic private investors,Pensions,Federal retirement funds,20.4
+Domestic private investors,State and local governments,Marketable Treasuries,1613.5
+Domestic private investors,State and local governments,State and Local Government Series,86.5
+Domestic private investors,Households and businesses,Households and nonprofits,2859
+Domestic private investors,Households and businesses,U.S. savings bonds,155
+Domestic private investors,Households and businesses,Nonfinancial corporations,123.3
+Domestic private investors,Households and businesses,Nonfinancial noncorporate businesses,87.2
+Domestic private investors,Dealers and other financial,Brokers and dealers,487.6
+Domestic private investors,Dealers and other financial,Government-sponsored enterprises,232.3
+Domestic private investors,Dealers and other financial,Central clearing counterparties,83.4
+Domestic private investors,Dealers and other financial,Asset-backed securities issuers,25.1
+Domestic private investors,Not identified,"Residual, holder not identified",1266.3
+Domestic private investors,Not identified,Other nonmarketable debt,101.1
 Federal Reserve,Federal Reserve,Federal Reserve,4218.8
 US government accounts,Social Security,Federal Old-Age And Survivors Insurance Trust Fund,2485.544908
 US government accounts,Social Security,Federal Disability Insurance Trust Fund,192.937848
