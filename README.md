@@ -15,6 +15,6 @@ Claude skills, one folder each. The copy saved in the Claude account is the one 
 
 The OMG BPMN 2.0.2 spec that `bpmn/spec.md` was distilled from is in [bpmn-skills/source/](bpmn-skills/source/). It is a source, not part of any skill.
 
-Charts made with voronoi-treemap are in [charts/](charts/): 2026 midterm donors, FY2025 federal outlays and holders of the federal debt. Each folder holds the data CSV, the PNG and SVG, and `proof.md`, which reconciles the data to its published total and records the measured area error.
+Charts made with voronoi-treemap are in [charts/](charts/): 2026 midterm donors, FY2025 federal outlays and holders of the federal debt. Each folder holds the data CSV, the PNG, SVG and PDF, and `proof.md`, which reconciles the data to its published total and records the measured area error. [charts/poster](charts/poster/) sets the federal outlays and debt charts on one A2 sheet as a print-ready vector PDF, with every source cited and linked; `poster.py` rebuilds it.
 
 Packaged copies of carovision and one-pager, ready to upload to the Claude account, are in [dist/](dist/).
