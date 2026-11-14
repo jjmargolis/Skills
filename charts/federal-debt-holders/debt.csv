@@ -11,195 +11,91 @@
 # units: billions of dollars; OFS-2 and TIC as published, MSPD converted from millions
 # derived: Federal Reserve 4218.8 = OFS-2 Federal Reserve and Government accounts 11523.6 less MSPD intragovernmental holdings 7304.8; Treasury publishes only the combined figure
 # omitted: 7 government funds that MSPD reports as zero or under $500,000
+# folded: within each government-account program, funds under $5bn are one cell, "Smaller funds (N)"; every fund and its program is in government-accounts.csv
+# regions: TIC attributes holdings to the country where the securities are held in custody, so custody centres (Belgium, Luxembourg, Cayman Islands) appear large
 # reconciliation: foreign 9052.0 + domestic private 15641.1 + Federal Reserve 4218.8 + government accounts 7304.8 = 36216.7; published total public debt 36214.3 (MSPD 36214.3)
 # difference: +2.4, because TIC has since revised March 2025 foreign holdings to 9052.0 from the 9049.5 printed in OFS-2
-group,label,value
-Foreign and international holders,Japan,1135.1
-Foreign and international holders,United Kingdom,779.2
-Foreign and international holders,"China, Mainland",765.4
-Foreign and international holders,Belgium,402.1
-Foreign and international holders,Canada,426.3
-Foreign and international holders,Luxembourg,412.4
-Foreign and international holders,Cayman Islands,453.5
-Foreign and international holders,France,363.1
-Foreign and international holders,Ireland,324.8
-Foreign and international holders,Taiwan,308.2
-Foreign and international holders,Switzerland,311.7
-Foreign and international holders,Singapore,263.2
-Foreign and international holders,Hong Kong,262.4
-Foreign and international holders,Norway,200.1
-Foreign and international holders,India,239.9
-Foreign and international holders,Brazil,208.4
-Foreign and international holders,Saudi Arabia,131.6
-Foreign and international holders,"Korea, South",125.8
-Foreign and international holders,Israel,92.5
-Foreign and international holders,Germany,109.6
-Foreign and international holders,Bermuda,95.8
-Foreign and international holders,United Arab Emirates,104.3
-Foreign and international holders,El Salvador,85.0
-Foreign and international holders,Mexico,91.5
-Foreign and international holders,Thailand,77.9
-Foreign and international holders,Spain,60.7
-Foreign and international holders,Australia,67.5
-Foreign and international holders,Netherlands,90.9
-Foreign and international holders,Kuwait,52.7
-Foreign and international holders,Italy,59.6
-Foreign and international holders,Philippines,59.3
-Foreign and international holders,Poland,57.5
-Foreign and international holders,Sweden,55.9
-Foreign and international holders,Peru,42.8
-Foreign and international holders,Colombia,47.3
-Foreign and international holders,Chile,37.1
-Foreign and international holders,All other countries,650.9
-Domestic private investors,Mutual funds,4421.3
-Domestic private investors,Other investors,5891.0
-Domestic private investors,Depository institutions,1878.1
-Domestic private investors,State and local governments,1700.0
-Domestic private investors,Insurance companies,622.9
-Domestic private investors,State and local government pension funds,502.0
-Domestic private investors,Private pension funds,470.8
-Domestic private investors,U.S. savings bonds,155.0
-Federal Reserve,Federal Reserve,4218.8
-US government accounts,"Abandoned Mines Reclamation Fund, Office Of Surface Mining Reclamation And Enforcement",14.056005
-US government accounts,Airport And Airway Trust Fund,14.697395
-US government accounts,Armed Forces Retirement Home Trust Fund,0.180624
-US government accounts,"Assessment Funds, Office Of The Comptroller Of The Currency",2.243614
-US government accounts,"Assets Forfeiture Fund, Justice",3.208187
-US government accounts,Aviation Insurance Revolving Fund,2.588982
-US government accounts,Blackfeet Water Settlement Implementation Fund,0.235886
-US government accounts,"Bonneville Power Administration Fund, Power Marketing Administration, Dept Of Energy",0.769
-US government accounts,"Capitol Preservation Fund, U.S. Capitol Preservation Commission",0.012746
-US government accounts,Capitol Visitor Center Revolving Fund,0.015656
-US government accounts,"Central Liquidity Facility, National Credit Union Administration",0.994396
-US government accounts,Cheyenne River Sioux Tribe Terrestrial Wildlife Habitat Restoration Trust Fund,0.045237
-US government accounts,Child Enrollment Contingency Fund,18.207461
-US government accounts,"Civil Service Retirement And Disability Fund, Office Of Personnel Management",1019.890257
-US government accounts,Claims Court Judges Retirement Fund,0.045532
-US government accounts,Coast Guard General Gift Fund,0.001047
-US government accounts,"Commodity Futures Trading Commission Customer Protection Fund, Commodity Futures Trading Commission",0.244
-US government accounts,Community Development Credit Union Revolving Fund National Credit Union Administration,0.01034
-US government accounts,"Conditional Gift Fund, General, Department Of State",0.026888
-US government accounts,Congressional Office For International Leadership,0.005849
-US government accounts,"Corporate Capital Account, United States International Development Finance Corporation",7.083405
-US government accounts,Court Of Veterans Appeals Retirement Fund,0.068213
-US government accounts,"Defense Cooperation Account, Defense",0.009171
-US government accounts,Department Of Defense Military Retirement Fund,1795.106017
-US government accounts,"Department Of Defense, Education Benefits Fund",0.7061
-US government accounts,"Department Of Defense, Medicare Eligible Retiree Fund",412.511221
-US government accounts,Department Of The Army General Gift Fund,0.001623
-US government accounts,Deposit Insurance Fund,103.71162
-US government accounts,Deposit Of Revenues Received From Mineral Leases On Lands Withdrawn For Alaskan Native Selection,0.060558
-US government accounts,Disgorgement Penalty Amounts Held For Investment,4.205845
-US government accounts,District Of Columbia Federal Pension Trust Fund,4.28482
-US government accounts,District Of Columbia Judges Retirement Fund,0.214179
-US government accounts,Eisenhower Exchange Fellowship Program Trust Fund,0.007955
-US government accounts,"Employees' Health Benefits Fund, Office Of Personnel Management",23.895325
-US government accounts,"Employees' Life Insurance Fund, Office Of Personnel Management",56.513449
-US government accounts,Energy Employees Occupational Illness Compensation Fund,0.855804
-US government accounts,"Environmental Dispute Resolution Fund, Morris K. Udall Scholarship And Excellence In National Environmental Policy Foundation",0.005
-US government accounts,Environmental Improvement And Restoration Fund,1.686416
-US government accounts,"Exchange Stabilization Fund, Office Of The Secretary, Treasury",20.068927
-US government accounts,"Expenses, Presidio Trust",0.355334
-US government accounts,"Farm Credit Insurance Fund, Capital Corporation Investment Fund, Farm Credit Administration",8.136557
-US government accounts,"Federal Aid To Wildlife Restoration, United States Fish And Wildlife Service",2.94
-US government accounts,Federal Disability Insurance Trust Fund,192.937848
-US government accounts,Federal Hospital Insurance Trust Fund,236.164343
-US government accounts,Federal Housing Finance Board Working Capital Fund,0.220372
-US government accounts,Federal Old-Age And Survivors Insurance Trust Fund,2485.544908
-US government accounts,Federal Supplementary Medical Insurance Trust Fund,176.341234
-US government accounts,"FHA, Mutual Mortgage Insurance Capital Reserve Account, Housing and Urban Development",161.70718
-US government accounts,"Financial Integrity Fund, Financial Crimesenforcement Network, Treasury",0.93844
-US government accounts,Financial Research Fund,0.126989
-US government accounts,"Foreign Service National Defined Contributions Retirement Fund, State",0.429236
-US government accounts,Foreign Service Retirement And Disability Fund,21.672592
-US government accounts,"FSLIC Resolution Fund, The",1.00548
-US government accounts,"General Post Fund, National Homes, Department Of Veterans Affairs",0.089296
-US government accounts,"Gifts And Bequests, Treasury",0.002492
-US government accounts,"Guarantees Of Mortgage-Backed Securities Capital Reserve Account, Government National Mortgage",25.113556
-US government accounts,"Guarantees Of Mortgage-Backed Securities Fund, Government National Mortgage Association, Housing And Urban Development",0.126061
-US government accounts,Gulf Coast Restoration Trust Fund,2.388954
-US government accounts,Harbor Maintenance Trust Fund,11.273092
-US government accounts,"Harry S. Truman Memorial Scholarship Trust Fund, Harry S. Truman Scholarship Foundation",0.053473
-US government accounts,Hazardous Substance Superfund,11.743953
-US government accounts,High-Hazard Indian Dam Safety Deferred Maintenance Fund,0.206109
-US government accounts,Highway Trust Fund,90.374621
-US government accounts,Host Nation Support For U.S. Relocation Activities Account,0.144275
-US government accounts,Indian Irrigation Fund,0.239892
-US government accounts,Inland Waterways Trust Fund,0.40094
-US government accounts,International Center For Middle Eastern-Western Dialogue Trust Fund,0.008894
-US government accounts,"International Center, Washington, D.C., State",0.019919
-US government accounts,"Israeli Arab Scholarship Program, United States Information Agency",0.004979
-US government accounts,James Madison Memorial Fellowship Foundation Fund,0.037341
-US government accounts,"Japan-United States Friendship Trust Fund, Japan-United States Friendship Commission",0.034726
-US government accounts,John C. Stennis Center For Public Service Training And Development,0.017881
-US government accounts,Judicial Officers Retirement Fund,1.647519
-US government accounts,Judicial Survivors Annuities Fund,0.725113
-US government accounts,Land Between The Lakes Trust Fund,0.006479
-US government accounts,Leaking Underground Storage Tank Trust Fund,1.726576
-US government accounts,Library Of Congress Gift Fund,0.052922
-US government accounts,Library Of Congress Trust Fund,0.015556
-US government accounts,Lincoln County Land Act,0.029188
-US government accounts,Low-Hazard Indian Dam Safety Deferred Maintenance Fund,0.090598
-US government accounts,Lower Brule Sioux Tribe Terrestrial Wildlife Habitat Restoration Trust Fund,0.015806
-US government accounts,"Lower Colorado River Basin Development Fund, Bureau Of Reclamation",0.525472
-US government accounts,Morris K. Udall Scholarship And Excellence In National Environmental Policy Trust Fund,0.051478
-US government accounts,"National Archives Trust Fund, National Archives And Records Administration",0.007697
-US government accounts,National Credit Union Share Insurance Fund,23.705675
-US government accounts,"National Gift Fund, National Archives And Records Administration",0.01696
-US government accounts,National Institutes Of Health Unconditional Gift Fund,0.046477
-US government accounts,National Parks and Public Lands Legacy Restoration Fund,7.251799
-US government accounts,National Security Education Trust Fund,0.002134
-US government accounts,"National Service Life Insurance Fund, Department Of Veterans Affairs",0.485846
-US government accounts,"National Service Trust, Corporation For National And Community Services",1.270765
-US government accounts,Native American Institutions Endowment Fund,0.283712
-US government accounts,"Natural Resource Damage Assessment And Restoration Fund, U.S. Fish And Wildlife Service, Interior",2.468007
-US government accounts,"Nuclear Waste Disposal Fund, Department Of Energy",73.714938
-US government accounts,Oil Spill Liability Trust Fund,10.39532
-US government accounts,"Operating Fund, National Credit Union Administration",0.062352
-US government accounts,"Operation And Maintenance, Indian Irrigation Systems, Bureau Of Indian Affairs",0.055905
-US government accounts,Panama Canal Commission Compensation Fund,0.00712
-US government accounts,Patient-Centered Outcomes Research Trust Fund,0.094697
-US government accounts,"Patients Benefit Fund, National Institutes Of Health",0.000683
-US government accounts,Pension Benefit Guaranty Corporation,65.094615
-US government accounts,Pesticide Registration Fund,0.004169
-US government accounts,Postal Service Fund,15.566205
-US government accounts,"Postal Service Fund, Debt Service Reserve Account",0.568874
-US government accounts,Postal Service Retiree Health Benefits Fund,25.088939
-US government accounts,"Power Systems, Indian Irrigation Projects, Bureau Of Indian Affairs",0.031918
-US government accounts,"Prison Industries Fund, Department Of Justice",0.318
-US government accounts,Railroad Retirement Account,0.775593
-US government accounts,Reclamation Water Settlements Fund,0.487405
-US government accounts,"Reregistration And Expedited Processing Fund, Environmental Protection Agency Management",0.045861
-US government accounts,"Retired Employees' Health Benefits Fund, Office Of Personnel Management",0.002946
-US government accounts,"Revolving Fund For Administrative Expense, Farm Credit Administration",0.046692
-US government accounts,"Science, Space And Technology Education Trust Fund, National Aeronautics And Space Administration",0.015669
-US government accounts,Securities And Exchange Commission Investor Protection Fund,0.350913
-US government accounts,"Seized Assets Fund, Justice",4.696404
-US government accounts,"Seized Currency, United States Customs Service",1.57882
-US government accounts,Senate Preservation Trust Fund,0.000565
-US government accounts,Servicemen's Group Life Insurance Fund,4.572377
-US government accounts,"Smithsonian Endowment Fund, Smithsonian Institution",0.001039
-US government accounts,"Social Security Equivalent Benefit Account, Railroad Retirement Board",1.256285
-US government accounts,South Dakota Terrestrial Wildlife Habitat Restoration Trust Fund,0.1192
-US government accounts,Southern Nevada Public Land Management Act Of 1998,1.78341
-US government accounts,Sport Fish Restoration And Boating Trust Fund,2.487226
-US government accounts,Support For U.S. Relocation To Guam Activities,0.713811
-US government accounts,Tax Court Judges Survivors Annuity Fund,0.013924
-US government accounts,Treasury Forfeiture Fund,4.712652
-US government accounts,"Trust Fund, The Barry Goldwater Scholarship And Excellence In Education Fund",0.0724
-US government accounts,"Unearned Copyright Fees, Library Of Congress",0.010802
-US government accounts,Unemployment Trust Fund,78.77014
-US government accounts,"United States Government Life Insurance Fund, Department Of Veterans Affairs",0.001286
-US government accounts,United States Naval Academy General Gift Fund,0.003186
-US government accounts,"United States Trustee System Fund, Justice",0.137819
-US government accounts,United States Victims Of State Sponsored Terrorism Fund,2.961196
-US government accounts,"Uranium Enrichment And Decommissioning Fund, Department Of Energy",0.218135
-US government accounts,USPS Vehicle Fund - HR,2.425356
-US government accounts,"Utah Reclamation Mitigation And Conservation Account, Interior",0.127997
-US government accounts,Vaccine Injury Compensation Trust Fund,4.708357
-US government accounts,"Veteran Affairs Life Insurance, Veterans Benefits Administration, Veterans Affairs",0.114978
-US government accounts,Veterans Reopened Insurance Fund,0.022768
-US government accounts,"Veterans Special Life Insurance Fund, Trust Revolving Fund, Department Of Veterans Affairs",0.601103
-US government accounts,"Voluntary Separation Incentive Fund, Defense",0.034277
-US government accounts,"War-Risk Insurance Revolving Fund, Maritime Administration",0.055862
-US government accounts,Marketable securities held by government accounts,20.168952
+group,subgroup,label,value
+Foreign and international holders,Asia and Pacific,Japan,1135.1
+Foreign and international holders,Europe,United Kingdom,779.2
+Foreign and international holders,Asia and Pacific,"China, Mainland",765.4
+Foreign and international holders,Europe,Belgium,402.1
+Foreign and international holders,Americas,Canada,426.3
+Foreign and international holders,Europe,Luxembourg,412.4
+Foreign and international holders,Americas,Cayman Islands,453.5
+Foreign and international holders,Europe,France,363.1
+Foreign and international holders,Europe,Ireland,324.8
+Foreign and international holders,Asia and Pacific,Taiwan,308.2
+Foreign and international holders,Europe,Switzerland,311.7
+Foreign and international holders,Asia and Pacific,Singapore,263.2
+Foreign and international holders,Asia and Pacific,Hong Kong,262.4
+Foreign and international holders,Europe,Norway,200.1
+Foreign and international holders,Asia and Pacific,India,239.9
+Foreign and international holders,Americas,Brazil,208.4
+Foreign and international holders,Middle East,Saudi Arabia,131.6
+Foreign and international holders,Asia and Pacific,"Korea, South",125.8
+Foreign and international holders,Middle East,Israel,92.5
+Foreign and international holders,Europe,Germany,109.6
+Foreign and international holders,Americas,Bermuda,95.8
+Foreign and international holders,Middle East,United Arab Emirates,104.3
+Foreign and international holders,Americas,El Salvador,85
+Foreign and international holders,Americas,Mexico,91.5
+Foreign and international holders,Asia and Pacific,Thailand,77.9
+Foreign and international holders,Europe,Spain,60.7
+Foreign and international holders,Asia and Pacific,Australia,67.5
+Foreign and international holders,Europe,Netherlands,90.9
+Foreign and international holders,Middle East,Kuwait,52.7
+Foreign and international holders,Europe,Italy,59.6
+Foreign and international holders,Asia and Pacific,Philippines,59.3
+Foreign and international holders,Europe,Poland,57.5
+Foreign and international holders,Europe,Sweden,55.9
+Foreign and international holders,Americas,Peru,42.8
+Foreign and international holders,Americas,Colombia,47.3
+Foreign and international holders,Americas,Chile,37.1
+Foreign and international holders,All other countries,All other countries,650.9
+Domestic private investors,Funds and institutions,Mutual funds,4421.3
+Domestic private investors,Individuals and others,Other investors,5891
+Domestic private investors,Funds and institutions,Depository institutions,1878.1
+Domestic private investors,State and local,State and local governments,1700
+Domestic private investors,Funds and institutions,Insurance companies,622.9
+Domestic private investors,State and local,State and local government pension funds,502
+Domestic private investors,Funds and institutions,Private pension funds,470.8
+Domestic private investors,Individuals and others,U.S. savings bonds,155
+Federal Reserve,Federal Reserve,Federal Reserve,4218.8
+US government accounts,Social Security,Federal Old-Age And Survivors Insurance Trust Fund,2485.544908
+US government accounts,Social Security,Federal Disability Insurance Trust Fund,192.937848
+US government accounts,Social Security,Smaller funds (2),2.031878
+US government accounts,Medicare,Federal Hospital Insurance Trust Fund,236.164343
+US government accounts,Medicare,Federal Supplementary Medical Insurance Trust Fund,176.341234
+US government accounts,Military and veterans,Department Of Defense Military Retirement Fund,1795.106017
+US government accounts,Military and veterans,"Department Of Defense, Medicare Eligible Retiree Fund",412.511221
+US government accounts,Military and veterans,Smaller funds (11),6.876868
+US government accounts,Civilian retirement and benefits,"Civil Service Retirement And Disability Fund, Office Of Personnel Management",1019.890257
+US government accounts,Civilian retirement and benefits,"Employees' Life Insurance Fund, Office Of Personnel Management",56.513449
+US government accounts,Civilian retirement and benefits,Postal Service Retiree Health Benefits Fund,25.088939
+US government accounts,Civilian retirement and benefits,"Employees' Health Benefits Fund, Office Of Personnel Management",23.895325
+US government accounts,Civilian retirement and benefits,Foreign Service Retirement And Disability Fund,21.672592
+US government accounts,Civilian retirement and benefits,Smaller funds (8),7.363269
+US government accounts,Insurance and guarantee funds,"FHA, Mutual Mortgage Insurance Capital Reserve Account, Housing and Urban Development",161.70718
+US government accounts,Insurance and guarantee funds,Deposit Insurance Fund,103.71162
+US government accounts,Insurance and guarantee funds,Pension Benefit Guaranty Corporation,65.094615
+US government accounts,Insurance and guarantee funds,"Guarantees Of Mortgage-Backed Securities Capital Reserve Account, Government National Mortgage",25.113556
+US government accounts,Insurance and guarantee funds,National Credit Union Share Insurance Fund,23.705675
+US government accounts,Insurance and guarantee funds,"Farm Credit Insurance Fund, Capital Corporation Investment Fund, Farm Credit Administration",8.136557
+US government accounts,Insurance and guarantee funds,Smaller funds (5),4.770781
+US government accounts,Transport and environment,Highway Trust Fund,90.374621
+US government accounts,Transport and environment,"Nuclear Waste Disposal Fund, Department Of Energy",73.714938
+US government accounts,Transport and environment,Airport And Airway Trust Fund,14.697395
+US government accounts,Transport and environment,"Abandoned Mines Reclamation Fund, Office Of Surface Mining Reclamation And Enforcement",14.056005
+US government accounts,Transport and environment,Hazardous Substance Superfund,11.743953
+US government accounts,Transport and environment,Harbor Maintenance Trust Fund,11.273092
+US government accounts,Transport and environment,Oil Spill Liability Trust Fund,10.39532
+US government accounts,Transport and environment,National Parks and Public Lands Legacy Restoration Fund,7.251799
+US government accounts,Transport and environment,Smaller funds (29),19.547598
+US government accounts,Unemployment insurance,Unemployment Trust Fund,78.77014
+US government accounts,Other accounts,Marketable securities held by government accounts,20.168952
+US government accounts,Other accounts,"Exchange Stabilization Fund, Office Of The Secretary, Treasury",20.068927
+US government accounts,Other accounts,Child Enrollment Contingency Fund,18.207461
+US government accounts,Other accounts,Postal Service Fund,15.566205
+US government accounts,Other accounts,"Corporate Capital Account, United States International Development Finance Corporation",7.083405
+US government accounts,Other accounts,Smaller funds (57),37.702694
