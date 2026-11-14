@@ -1,0 +1,66 @@
+# title: Where $7.0 trillion went: US federal outlays, fiscal year 2025
+# subtitle: Net outlays by superfunction, function and subfunction. Cells total $7.19tn; two net-negative lines (commerce and housing credit, -28.1bn; undistributed offsetting receipts, -150.3bn) have no area and bring the total to $7.01tn.
+# source: OMB Historical Tables 3.1 and 3.2, Budget of the US Government FY2027 (actuals for FY2025)
+# source_url: https://www.whitehouse.gov/wp-content/uploads/2026/04/hist03z1_fy2027.xlsx
+# source_url: https://www.whitehouse.gov/wp-content/uploads/2026/04/hist03z2_fy2027.xlsx
+# as_of: fiscal year ended 2025-09-30
+# prefix: $
+# scale: 1e6
+# units: millions of dollars, as published
+# rule: a function with any negative subfunction is one cell at its published net total, so every cell is a net amount
+# reconciliation: cells 7189490 + commerce and housing credit -28131 + undistributed offsetting receipts -150254 = 7011105; published total outlays 7011105
+# cross-check: Monthly Treasury Statement, September 2025, Table 9 total outlays 7009974 (differs by 1131; OMB actuals are the later, final figures)
+group,subgroup,label,value
+National Defense,National Defense,Military Personnel,206527
+National Defense,National Defense,Operation and Maintenance,342398
+National Defense,National Defense,Procurement,161963
+National Defense,National Defense,"Research, Development, Test, and Evaluation",141424
+National Defense,National Defense,Military Construction,13150
+National Defense,National Defense,Family Housing,1785
+National Defense,National Defense,Other (military),1179
+National Defense,National Defense,Atomic energy defense activities,36551
+National Defense,National Defense,Defense-related activities,11163
+Human resources,"Education, Training, Employment, and Social Services","Education, Training, Employment, and Social Services",72042
+Human resources,Health,Health care services,922659
+Human resources,Health,Health research and training,50204
+Human resources,Health,Consumer and occupational health and safety,5648
+Human resources,Medicare,Medicare,996718
+Human resources,Income Security,General retirement and disability insurance (excluding social security),6663
+Human resources,Income Security,Federal employee retirement and disability,190234
+Human resources,Income Security,Unemployment compensation,41771
+Human resources,Income Security,Housing assistance,77989
+Human resources,Income Security,Food and nutrition assistance,149631
+Human resources,Income Security,Other income security,235321
+Human resources,Social Security,Social security,1580673
+Human resources,Veterans Benefits and Services,Income security for veterans,200631
+Human resources,Veterans Benefits and Services,"Veterans education, training, and rehabilitation",16379
+Human resources,Veterans Benefits and Services,Hospital and medical care for veterans,148835
+Human resources,Veterans Benefits and Services,Veterans housing,981
+Human resources,Veterans Benefits and Services,Other veterans benefits and services,10337
+Physical resources,Energy,Energy supply,11794
+Physical resources,Energy,Energy conservation,5792
+Physical resources,Energy,Emergency energy preparedness,2383
+Physical resources,Energy,"Energy information, policy, and regulation",796
+Physical resources,Natural Resources and Environment,Water resources,17020
+Physical resources,Natural Resources and Environment,Conservation and land management,19675
+Physical resources,Natural Resources and Environment,Recreational resources,5614
+Physical resources,Natural Resources and Environment,Pollution control and abatement,36232
+Physical resources,Natural Resources and Environment,Other natural resources,11293
+Physical resources,Transportation,Ground transportation,100827
+Physical resources,Transportation,Air transportation,29743
+Physical resources,Transportation,Water transportation,13852
+Physical resources,Transportation,Other transportation,898
+Physical resources,Community and Regional Development,Community development,12318
+Physical resources,Community and Regional Development,Area and regional development,7288
+Physical resources,Community and Regional Development,Disaster relief and insurance,62768
+Net interest,Net interest,Net interest,970065
+Other functions,International Affairs,International Affairs,45171
+Other functions,"General Science, Space, and Technology",General science and basic research,18362
+Other functions,"General Science, Space, and Technology","Space flight, research, and supporting activities",23604
+Other functions,Agriculture,Farm income stabilization,21185
+Other functions,Agriculture,Agricultural research and services,26262
+Other functions,Administration of Justice,Federal law enforcement activities,43862
+Other functions,Administration of Justice,Federal litigative and judicial activities,19909
+Other functions,Administration of Justice,Federal correctional activities,9133
+Other functions,Administration of Justice,Criminal justice assistance,10242
+Other functions,General Government,General Government,40546
