@@ -2,7 +2,11 @@
 """Circular Voronoi treemap: a disc cut into convex cells whose areas are
 proportional to value, nested by group (and optionally subgroup).
 
-    python voronoi_treemap.py data.csv        ->  data.png, data.svg
+    python voronoi_treemap.py data.csv        ->  data.png, data.svg, data.pdf
+
+main(path, out, short_key=True) is for print layouts that need a shorter key:
+it leaves out cells too small to carry even a key number, which have no mark
+in the disc to look up, and says how many were left out.
 
 CSV columns: group,label,value  or  group,subgroup,label,value, plus an
 optional last column icon: an image path relative to the CSV, drawn above or
@@ -19,6 +23,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 matplotlib.rcParams["svg.hashsalt"] = "voronoi-treemap"  # same CSV, same SVG bytes
+matplotlib.rcParams["pdf.fonttype"] = 42  # embed TrueType outlines, not Type 3, for print
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.font_manager import FontProperties
@@ -303,7 +308,7 @@ def spread(items, lo, hi, gap=4):
         bottom = d["y"] + d["h"] / 2 + gap
 
 
-def main(path):
+def main(path, out=None, short_key=False, formats=("png", "svg", "pdf")):
     meta, root, depth = read(path)
     rng = np.random.default_rng(0)
     c0 = np.zeros(2)
@@ -346,8 +351,9 @@ def main(path):
                     else:
                         lines = []
                     tiers[1 if lines else 2] += 1
-                    s_lines.append((f"{mark}  {leaf.name}  {val}", False))
-                    in_key.add(leaf.name)
+                    if lines or not short_key:
+                        s_lines.append((f"{mark}  {leaf.name}  {val}", False))
+                        in_key.add(leaf.name)
                 else:
                     tiers[0] += 1
                 for i, (s, bold) in enumerate(lines):
@@ -371,6 +377,8 @@ def main(path):
         g.arc = max(rim_runs(g.poly, c0), key=lambda r: r[1] - r[0], default=None)
         if g_lines or g.arc is None:
             key += [(f"{g.name}  {money(g.value, meta)}", True)] + g_lines
+    if short_key and tiers[2]:
+        key.append((f"{tiers[2]} cells too small to number are not listed; {Path(path).name} has every value.", False))
 
     # Key under the disc: one column up to 12 lines, then three.
     col_w, key_f = (W - 2 * MARGIN - 2 * 18) / 3, 6.5
@@ -466,13 +474,16 @@ def main(path):
         col, row = divmod(i, rows)
         put(MARGIN + col * (col_w + 18), cy - (r_lab + 30) - 14 - row * key_f * 1.4, s, key_f, bold)
 
-    out = Path(path).with_suffix("")
-    fig.savefig(f"{out}.png", dpi=300, facecolor="white")
-    fig.savefig(f"{out}.svg", facecolor="white", metadata={"Date": None})
+    out = Path(out or Path(path).with_suffix(""))
+    options = {"png": dict(dpi=300), "svg": dict(metadata={"Date": None}),
+               "pdf": dict(metadata={"CreationDate": None})}
+    for fmt in formats:
+        fig.savefig(f"{out}.{fmt}", facecolor="white", **options[fmt])
+    plt.close(fig)
     print(f"{len(root.leaves())} cells in {len(root.children)} groups, total {money(root.value, meta)}")
     print(f"max area error {err:.2e} (limit {LEAF_TOL:.0e})")
     print(f"labels: {tiers[0]} in cell, {tiers[1]} by key number, {tiers[2]} key only")
-    print(f"wrote {out}.png {out}.svg")
+    print("wrote " + " ".join(f"{out}.{fmt}" for fmt in formats))
 
 
 if __name__ == "__main__":
