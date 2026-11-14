@@ -4,7 +4,9 @@ proportional to value, nested by group (and optionally subgroup).
 
     python voronoi_treemap.py data.csv        ->  data.png, data.svg
 
-CSV columns: group,label,value  or  group,subgroup,label,value.
+CSV columns: group,label,value  or  group,subgroup,label,value, plus an
+optional last column icon: an image path relative to the CSV, drawn above or
+below the label, whichever lets the label be larger.
 Lines starting with '#' are 'key: value' metadata: title, subtitle, source,
 as_of, prefix (e.g. $), scale (number one CSV unit stands for, e.g. 1e6).
 """
@@ -16,6 +18,7 @@ from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
+matplotlib.rcParams["svg.hashsalt"] = "voronoi-treemap"  # same CSV, same SVG bytes
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.font_manager import FontProperties
@@ -28,6 +31,7 @@ RIM_N = 360               # disc as a regular polygon: 0.005% short of a circle
 SPLIT_TOL = 3e-4          # relative area error allowed in one subdivision
 LEAF_TOL = 1e-3           # relative area error allowed on a finished leaf
 F_MAX, F_MIN, PAD, PITCH = 15.0, 4.5, 1.5, 1.18
+ICON_H, ICON_GAP = 3.5, 0.3  # icon height and its gap to the text, in font sizes
 INK, MUTED = "#1a1a19", "#5f5e58"
 STROKE = (0.6, 1.5, 2.8)  # leaf, subgroup, group
 # Group colours in fixed order (never cycled): fill tint, arc colour.
@@ -131,7 +135,7 @@ def rim_runs(p, c):
 
 class Node:
     def __init__(self, name):
-        self.name, self.children, self.value, self.poly = name, [], 0.0, None
+        self.name, self.children, self.value, self.poly, self.icon = name, [], 0.0, None, None
 
     def child(self, name):
         for c in self.children:
@@ -153,10 +157,13 @@ def read(path):
         elif line.strip():
             rows.append(line)
     header, *data = csv.reader(rows)
-    if len(header) not in (3, 4):
-        sys.exit("CSV needs columns group,label,value or group,subgroup,label,value")
+    icons = header[-1].strip() == "icon"
+    depth = len(header) - 1 - icons
+    if depth not in (2, 3):
+        sys.exit("CSV needs columns group,label,value or group,subgroup,label,value (plus optional icon)")
     root = Node("")
-    for *path_, value in data:
+    for row in data:
+        *path_, value = row[:depth + 1]
         node = root
         for name in path_:
             node.value += float(value)
@@ -164,9 +171,11 @@ def read(path):
         if node.value or float(value) <= 0:
             sys.exit(f"duplicate or non-positive row: {path_}")
         node.value = float(value)
+        if icons and row[-1].strip():
+            node.icon = plt.imread(Path(path).parent / row[-1].strip())
     if len(root.children) > len(PALETTE):
         sys.exit(f"{len(root.children)} groups; the palette distinguishes {len(PALETTE)}. Merge groups.")
-    return meta, root, len(header) - 1
+    return meta, root, depth
 
 
 def layout(node, rng):
@@ -184,17 +193,35 @@ def width(s, bold=False):
     return TextPath((0, 0), s, size=1, prop=BOLD if bold else REG).get_extents().width if s.strip() else 0.0
 
 
-def fit(poly, lines):
-    """Largest font size at which the centred block of lines stays inside the
-    convex polygon, PAD clear of every edge."""
+def block(lines, aspect=None, above=True):
+    """Rectangles (x0, y0, x1, y1) of a centred label block at font size 1:
+    the text, and when aspect is given an icon of that width/height ratio
+    stacked above or below it."""
+    w, h = max(width(*l) for l in lines), len(lines) * PITCH
+    if aspect is None:
+        return [(-w / 2, -h / 2, w / 2, h / 2)]
+    total = h + ICON_GAP + ICON_H
+    text = (-w / 2, -total / 2, w / 2, -total / 2 + h)
+    icon = (-aspect * ICON_H / 2, total / 2 - ICON_H, aspect * ICON_H / 2, total / 2)
+    if not above:
+        text, icon = [(x0, -y1, x1, -y0) for x0, y0, x1, y1 in (text, icon)]
+    return [text, icon]
+
+
+def fit(poly, rects):
+    """Largest font size at which every rectangle of the block, centred on the
+    centroid, stays inside the convex polygon, PAD clear of every edge. A
+    rectangle is inside a convex polygon when its corners are, and each
+    corner moves linearly with font size, so the bound is a minimum of ratios."""
     c = centroid(poly)
     e = np.roll(poly, -1, 0) - poly
     length = np.hypot(*e.T)
     keep = length > 1e-9
     n = np.c_[e[:, 1], -e[:, 0]][keep] / length[keep, None]  # outward normals
     slack = ((poly[keep] - c) * n).sum(1) - PAD
-    half_w, half_h = max(width(*l) for l in lines) / 2, len(lines) * PITCH / 2
-    return (slack / (np.abs(n[:, 0]) * half_w + np.abs(n[:, 1]) * half_h)).min()
+    corners = np.array([(x, y) for x0, y0, x1, y1 in rects for x in (x0, x1) for y in (y0, y1)])
+    reach = (n @ corners.T).max(1)  # furthest corner toward each edge, per font size
+    return (slack / reach).min()
 
 
 def wraps(words, max_lines):
@@ -252,23 +279,33 @@ def main(path):
 
     # Leaf labels: name + bold value at the largest size that fits; else a key number.
     key, n_key, tiers = [], 0, [0, 0, 0]
-    texts = []  # (x, y, string, size, bold, colour, ha)
+    texts, images = [], []  # (x, y, string, size, bold, colour, ha); (pixels, extent)
     for g in root.children:
         g_lines = []
         for sub in (g.children if depth == 3 else [g]):
             s_lines = []
             for leaf in sub.leaves():
                 val, c = money(leaf.value, meta), centroid(leaf.poly)
-                best = max(((fit(leaf.poly, [(s, False) for s in w] + [(val, True)]), -len(w), w)
-                            for w in wraps(leaf.name.split(), 3)), key=lambda t: t[:2])
-                f, lines = min(best[0], F_MAX), [(s, False) for s in best[2]] + [(val, True)]
+                def best(aspect):
+                    return max(((fit(leaf.poly, block(ls, aspect, above)), -len(ls), ls, above)
+                                for w in wraps(leaf.name.split(), 3)
+                                for ls in [[(s, False) for s in w] + [(val, True)]]
+                                for above in ((True, False) if aspect else (True,))), key=lambda t: t[:2])
+                aspect = leaf.icon.shape[1] / leaf.icon.shape[0] if leaf.icon is not None else None
+                f, _, lines, above = best(aspect)
+                if aspect and f < F_MIN:  # no room for the icon: label alone
+                    aspect = None
+                    f, _, lines, above = best(None)
+                f = min(f, F_MAX)
+                rects = block(lines, aspect, above)
                 if f < F_MIN:
-                    f = fit(leaf.poly, [(str(n_key + 1), False)])
+                    f = fit(leaf.poly, block([(str(n_key + 1), False)]))
                     mark = "·"
                     if f >= F_MIN:
                         n_key += 1
                         mark = str(n_key)
                         lines, f = [(mark, False)], min(f, 7.0)
+                        rects = block(lines)
                     else:
                         lines = []
                     tiers[1 if lines else 2] += 1
@@ -276,8 +313,11 @@ def main(path):
                 else:
                     tiers[0] += 1
                 for i, (s, bold) in enumerate(lines):
-                    y = c[1] + ((len(lines) - 1) / 2 - i) * PITCH * f
+                    y = c[1] + (rects[0][3] - (i + 0.5) * PITCH) * f
                     texts.append((c[0], y, s, f, bold, INK, "center"))
+                if lines and len(rects) == 2:
+                    x0, y0, x1, y1 = np.array(rects[1]) * f
+                    images.append((leaf.icon, (c[0] + x0, c[0] + x1, c[1] + y0, c[1] + y1)))
             sub.arc = max(rim_runs(sub.poly, c0), key=lambda r: r[1] - r[0], default=None)
             if depth == 3 and (s_lines or sub.arc is None):
                 head = f"{sub.name}  {money(sub.value, meta)}"
@@ -332,6 +372,10 @@ def main(path):
         ax.fill(*(g.poly + centre).T, fc="none", ec="white", lw=STROKE[2], joinstyle="round")
     for x, y, s, f, bold, color, ha in texts:
         put(x + centre[0], y + centre[1], s, f, bold, color, ha)
+    for pixels, (x0, x1, y0, y1) in images:
+        ax.imshow(pixels, extent=(x0 + centre[0], x1 + centre[0], y0 + centre[1], y1 + centre[1]),
+                  aspect="auto", zorder=3, interpolation="lanczos")
+    ax.set(xlim=(0, W), ylim=(0, H))
 
     # Dimension arcs outside the rim: subgroups on the inner ring, groups on
     # the outer ring, each with a leader to its name and total.
@@ -380,7 +424,7 @@ def main(path):
 
     out = Path(path).with_suffix("")
     fig.savefig(f"{out}.png", dpi=300, facecolor="white")
-    fig.savefig(f"{out}.svg", facecolor="white")
+    fig.savefig(f"{out}.svg", facecolor="white", metadata={"Date": None})
     print(f"{len(root.leaves())} cells in {len(root.children)} groups, total {money(root.value, meta)}")
     print(f"max area error {err:.2e} (limit {LEAF_TOL:.0e})")
     print(f"labels: {tiers[0]} in cell, {tiers[1]} by key number, {tiers[2]} key only")
