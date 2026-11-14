@@ -16,7 +16,7 @@ Answer these in your head first. If you can't, you're not ready to lay out a pag
 - **The chart carries the argument.** It should show the mechanism or the result, not decorate. A reader skimming only the title and chart should get the gist. If the chart could be deleted without loss, redesign it.
 - **Text and chart agree exactly.** Same numbers, same names, same colors for the same actors in both.
 - **Headline sentences.** Each paragraph's first sentence says its point; the rest supports it. Bold lead-ins ("How it works.", "The catch.") act as signposts.
-- **Every element earns its place.** Cut anything that doesn't advance the one sentence: history, tangents, extra caveats. White space is fine. Under a page is fine.
+- **Every element earns its place.** Cut anything that doesn't advance the one sentence: history, tangents. A caveat that could change the reader's conclusion advances it; keep it. White space is fine. Under a page is fine.
 - **Define each term once, at first use,** in plain words, even at graduate level if it's not universal.
 - **End on why it matters,** framed as the idea's real lesson, not a summary.
 
@@ -24,7 +24,7 @@ Answer these in your head first. If you can't, you're not ready to lay out a pag
 Same structure, different depth: **question → example → core claim → mechanism + chart → limit → why it matters.**
 
 - **Graduate.** Formal statement with explicit assumptions; notation, optimality conditions, a proof sketch; worked example with functional forms and every number computed; analytical chart with labeled regions; limits include technical caveats; short reference list. Serif, 10pt, grayscale.
-- **Undergraduate.** Plain-English boxed statement; a concrete textbook story; numbers but no calculus; the same analytical chart with axes in words, color, and a legend; 3 intuitive limits. Serif, 11pt, one accent color.
+- **Undergraduate.** Plain-English boxed statement; a concrete textbook story; math through multivariable calculus (derivatives, integrals, partials, constrained optimization), no linear algebra or multi-step proofs; the same analytical chart with axes in words, color, and a legend; 3 intuitive limits. Serif, 11pt, one accent color.
 - **General (ELI5).** Everyday story with named characters; dollar amounts or counts only; a simple bar chart plus illustrated panels that walk through the cases step by step; one "catch"; minimal text, large type. Sans, 3–4 colors.
 
 ## Clarity pass

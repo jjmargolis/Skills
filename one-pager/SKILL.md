@@ -12,12 +12,14 @@ A single page that leaves the reader able to restate the idea in one sentence. T
 
 Each mode file gives the thinking steps, the principles, the three levels and the clarity pass. Honesty, build and checks below are shared.
 
+Level sets vocabulary and math, not substance. Anything that bears on the conclusion (how a headline number was built, a contested assumption, a live empirical dispute) appears at every level, explained in that level's terms.
+
 No fake textbook labels (chapter/figure numbers, running heads) unless asked. Write the page in the language the user asked in.
 
 ## Honesty
 - Compute every number yourself (Python if non-trivial). The chart uses the same functions/data.
 - In the reply, say which facts and citations came from memory vs. a search; flag memory-only numbers and page references as worth checking.
-- At simpler levels, say in one line what nuance was sacrificed.
+- At simpler levels, say in one line what formalism was simplified.
 
 ## Build
 LaTeX + pgfplots/TikZ. Copy `onepager.sty` from this skill's folder to beside the `.tex` and start from:
@@ -66,6 +68,15 @@ It prints the page count, then how many text blocks start at each left edge (x) 
 - **Internal alignment:** list bullets align with paragraph text edges; table numbers right- or decimal-aligned (`siunitx` `S` columns); legend and labels not touching curves or the frame.
 - **Panels:** step panels equal height, captions on the same baseline, icons centered in their panels.
 
+**Chart integrity pass** (every chart must be rigorous and impossible to misread):
+- Bar charts start at zero. A line chart with a truncated y-axis marks the break.
+- Log scale only when data span orders of magnitude or the claim is about ratios or growth rates; the axis says "log scale"; charts being compared use the same scale type.
+- Panels being compared share axis ranges and units. No dual y-axes.
+- Every axis has units; dollars state nominal or real and the base year; data charts name their source.
+- Size and area encode value linearly; no icons scaled by height.
+- Aspect ratio neither exaggerates nor flattens the trend.
+- Plotted values match the computed numbers and the text exactly.
+
 **Clarity pass:** the questions at the end of the mode file.
 
-Iterate until all three passes are clean. Deliver the PDF so the user can open it. Reply in a few lines: the one sentence, memory vs. sources, and one honest trade-off.
+Iterate until all four passes are clean. Deliver the PDF so the user can open it. Reply in a few lines: the one sentence, memory vs. sources, and one honest trade-off.
