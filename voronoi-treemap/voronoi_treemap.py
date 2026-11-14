@@ -2,7 +2,11 @@
 """Circular Voronoi treemap: a disc cut into convex cells whose areas are
 proportional to value, nested by group (and optionally subgroup).
 
-    python voronoi_treemap.py data.csv        ->  data.png, data.svg
+    python voronoi_treemap.py data.csv        ->  data.png, data.svg, data.pdf
+
+main(path, out, short_key=True) is for print layouts that need a shorter key:
+it leaves out cells too small to carry even a key number, which have no mark
+in the disc to look up, and says how many were left out.
 
 CSV columns: group,label,value  or  group,subgroup,label,value, plus an
 optional last column icon: an image path relative to the CSV, drawn above or
@@ -19,6 +23,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 matplotlib.rcParams["svg.hashsalt"] = "voronoi-treemap"  # same CSV, same SVG bytes
+matplotlib.rcParams["pdf.fonttype"] = 42  # embed TrueType outlines, not Type 3, for print
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.font_manager import FontProperties
@@ -29,6 +34,7 @@ from matplotlib.textpath import TextPath
 W, R, MARGIN = 780, 265, 36
 RIM_N = 360               # disc as a regular polygon: 0.005% short of a circle
 SPLIT_TOL = 3e-4          # relative area error allowed in one subdivision
+LLOYD = 25                # centroid relaxation rounds per subdivision
 LEAF_TOL = 1e-3           # relative area error allowed on a finished leaf
 F_MAX, F_MIN, PAD, PITCH = 15.0, 4.5, 1.5, 1.18
 ICON_H, ICON_GAP = 3.5, 0.3  # icon height and its gap to the text, in font sizes
@@ -55,36 +61,77 @@ def centroid(p):
     return np.array([((x + xn) * c).sum(), ((y + yn) * c).sum()]) / (3 * c.sum())
 
 
-def clip(p, n, d):
-    """Part of convex polygon p where n.x <= d. The kept vertices of a convex
+def clip(p, lab, n, d, j):
+    """Part of convex polygon p where n.x <= d. lab[i] names what lies across
+    edge p[i]->p[i+1]; the new edge is named j. The kept vertices of a convex
     polygon form one cyclic run, so the cut adds exactly two points."""
-    if len(p) == 0:
-        return p
     s = p @ n - d
     inside = s <= 0
     if inside.all():
-        return p
+        return p, lab
     if not inside.any():
-        return p[:0]
+        return p[:0], lab[:0]
     k = len(p)
     first = np.flatnonzero(inside & ~np.roll(inside, 1))[0]
     run = (first + np.arange(inside.sum())) % k
-    a, b = (run[0] - 1) % k, run[0]
-    c, e = run[-1], (run[-1] + 1) % k
-    cut = lambda i, j: p[i] + (p[j] - p[i]) * s[i] / (s[i] - s[j])
-    return np.vstack([cut(a, b), p[run], cut(c, e)])
+    a, c = (run[0] - 1) % k, run[-1]
+    cut = lambda i, j_: p[i] + (p[j_] - p[i]) * s[i] / (s[i] - s[j_])
+    return (np.vstack([cut(a, run[0]), p[run], cut(c, (c + 1) % k)]),
+            np.concatenate([[lab[a]], lab[run], [j]]))
 
 
-def power_cells(P, S, w):
-    """Cell i = points of P whose power distance |x-s_i|^2 - w_i is smallest."""
+def diagram(P, S, w):
+    """Power diagram of sites S with weights w inside convex polygon P:
+    cell i = points of P whose power distance |x-s_i|^2 - w_i is smallest.
+    Returns the cells, their areas, and H = d(area)/d(weight)."""
+    k = len(S)
     sq = (S ** 2).sum(1)
-    cells = []
-    for i in range(len(S)):
-        c = P
-        for j in np.argsort(((S - S[i]) ** 2).sum(1))[1:]:
-            c = clip(c, 2 * (S[j] - S[i]), sq[j] - sq[i] + w[i] - w[j])
+    cells, A, H = [], np.zeros(k), np.zeros((k, k))
+    for i in range(k):
+        c, lab = P, np.full(len(P), -1)
+        dist = np.hypot(*(S - S[i]).T)
+        for j in np.argsort(dist)[1:]:
+            # Sites are taken nearest first. With every vertex within r of
+            # s_i, site j can only cut if (dist - r)^2 - w_j < r^2 - w_i.
+            r = np.hypot(*(c - S[i]).T).max()
+            if dist[j] >= r + np.sqrt(max(r * r - w[i] + w.max(), 0.0)):
+                break
+            c, lab = clip(c, lab, 2 * (S[j] - S[i]), sq[j] - sq[i] + w[i] - w[j], j)
+            if len(c) == 0:
+                break
         cells.append(c)
-    return cells
+        if len(c) > 2:
+            A[i] = area(c)
+            length = np.hypot(*(np.roll(c, -1, 0) - c).T)
+            for j in np.unique(lab[lab >= 0]):  # shared edge of length l moves l/(2d) per unit weight
+                H[i, j] = -length[lab == j].sum() / (2 * np.hypot(*(S[j] - S[i])))
+            H[i, i] = -H[i].sum()
+    return cells, A, H
+
+
+def solve(P, S, w, targets, tol):
+    """Weights that give the cells their target areas, by damped Newton steps
+    on the concave dual; no cell is ever allowed to vanish."""
+    cells, A, H = diagram(P, S, w)
+    if A.min() <= 0:  # equal weights give the Voronoi diagram, where every cell contains its site
+        w = np.zeros(len(S))
+        cells, A, H = diagram(P, S, w)
+    floor = 0.5 * min(A.min(), targets.min())
+    for _ in range(200):
+        if np.abs(A / targets - 1).max() < tol:
+            return cells, w
+        step = np.r_[0.0, np.linalg.lstsq(H[1:, 1:], (targets - A)[1:], rcond=None)[0]]
+        t = 1.0
+        while True:
+            trial = diagram(P, S, w + t * step)
+            if trial[1].min() >= floor and np.linalg.norm(targets - trial[1]) <= (1 - t / 2) * np.linalg.norm(targets - A):
+                break
+            t /= 2
+            if t < 1e-9:
+                raise RuntimeError("layout stalled")
+        w = w + t * step
+        cells, A, H = trial
+    raise RuntimeError(f"layout did not reach {tol:.0e} for a {len(S)}-way split")
 
 
 def split(P, targets, rng):
@@ -100,15 +147,10 @@ def split(P, targets, rng):
         if (edges[:, 0] * (x - P)[:, 1] - edges[:, 1] * (x - P)[:, 0] >= 0).all():
             S = np.vstack([S, x])
     w = np.zeros(k)
-    for it in range(4000):
-        cells = power_cells(P, S, w)
-        A = np.array([area(c) if len(c) > 2 else 0.0 for c in cells])
-        if np.abs(A / targets - 1).max() < SPLIT_TOL:
-            return cells
-        if it < 150:  # Lloyd steps round the cells; then sites stay fixed
-            S = np.array([centroid(c) if a > 0 else s for c, a, s in zip(cells, A, S)])
-        w += 0.5 * (targets - A)  # concave ascent: grow cells that are too small
-    raise RuntimeError(f"layout did not reach {SPLIT_TOL:.0e} for a {k}-way split")
+    for _ in range(LLOYD):  # move each site to its cell's centroid: rounder cells
+        cells, w = solve(P, S, w, targets, 0.1)  # rough is enough until the last round
+        S = np.array([centroid(c) for c in cells])
+    return solve(P, S, w, targets, SPLIT_TOL)[0]
 
 
 def rim_runs(p, c):
@@ -266,7 +308,7 @@ def spread(items, lo, hi, gap=4):
         bottom = d["y"] + d["h"] / 2 + gap
 
 
-def main(path):
+def main(path, out=None, short_key=False, formats=("png", "svg", "pdf")):
     meta, root, depth = read(path)
     rng = np.random.default_rng(0)
     c0 = np.zeros(2)
@@ -283,12 +325,12 @@ def main(path):
     for g in root.children:
         g_lines = []
         for sub in (g.children if depth == 3 else [g]):
-            s_lines = []
+            s_lines, in_key = [], set()
             for leaf in sub.leaves():
                 val, c = money(leaf.value, meta), centroid(leaf.poly)
                 def best(aspect):
                     return max(((fit(leaf.poly, block(ls, aspect, above)), -len(ls), ls, above)
-                                for w in wraps(leaf.name.split(), 3)
+                                for w in wraps(leaf.name.split(), 5)
                                 for ls in [[(s, False) for s in w] + [(val, True)]]
                                 for above in ((True, False) if aspect else (True,))), key=lambda t: t[:2])
                 aspect = leaf.icon.shape[1] / leaf.icon.shape[0] if leaf.icon is not None else None
@@ -309,7 +351,9 @@ def main(path):
                     else:
                         lines = []
                     tiers[1 if lines else 2] += 1
-                    s_lines.append((f"{mark}  {leaf.name}  {val}", False))
+                    if lines or not short_key:
+                        s_lines.append((f"{mark}  {leaf.name}  {val}", False))
+                        in_key.add(leaf.name)
                 else:
                     tiers[0] += 1
                 for i, (s, bold) in enumerate(lines):
@@ -319,16 +363,22 @@ def main(path):
                     x0, y0, x1, y1 = np.array(rects[1]) * f
                     images.append((leaf.icon, (c[0] + x0, c[0] + x1, c[1] + y0, c[1] + y1)))
             sub.arc = max(rim_runs(sub.poly, c0), key=lambda r: r[1] - r[0], default=None)
-            if depth == 3 and (s_lines or sub.arc is None):
+            # A subgroup gets its own key line unless the group line or its
+            # only leaf's line already says the same thing.
+            redundant = sub.name == g.name or [l.name for l in sub.leaves()] == [sub.name]
+            if depth == 3 and not redundant and (s_lines or (sub.arc is None and len(sub.children) > 1)):
                 head = f"{sub.name}  {money(sub.value, meta)}"
-                if sub.arc is None:  # no rim arc to carry the name: list members here
-                    head += ": " + ", ".join(l.name for l in sub.leaves())
+                drawn = [l.name for l in sub.leaves() if l.name not in in_key]
+                if sub.arc is None and drawn:  # no rim arc to carry the name: name the labelled members
+                    head += ": " + ", ".join(drawn)
                 g_lines += [(head, False)] + [("   " + s, b) for s, b in s_lines]
             else:
                 g_lines += s_lines
         g.arc = max(rim_runs(g.poly, c0), key=lambda r: r[1] - r[0], default=None)
         if g_lines or g.arc is None:
             key += [(f"{g.name}  {money(g.value, meta)}", True)] + g_lines
+    if short_key and tiers[2]:
+        key.append((f"{tiers[2]} cells too small to number are not listed; {Path(path).name} has every value.", False))
 
     # Key under the disc: one column up to 12 lines, then three.
     col_w, key_f = (W - 2 * MARGIN - 2 * 18) / 3, 6.5
@@ -343,7 +393,8 @@ def main(path):
     r_sub, r_grp = R + 7, R + (15 if depth == 3 else 7)
     r_lab = r_grp + 20
     wrap_w = W / 2 - r_lab - 16  # room beside the disc at its widest
-    top = 100 if meta.get("subtitle") else 76
+    subtitle = wrap_to(meta.get("subtitle", ""), 10.5, W - 2 * MARGIN)
+    top = 76 + 15 * len(subtitle) + (9 if subtitle[0] else 0)
     H = top + 2 * (r_lab + 30) + key_h + 44
     cy = H - top - (r_lab + 30)
     centre = np.array([W / 2, cy])
@@ -356,7 +407,8 @@ def main(path):
         x, y, s, fontsize=size, fontproperties=BOLD if bold else REG, color=color, ha=ha, va=va)
 
     put(MARGIN, H - 44, meta.get("title", ""), 20, True)
-    put(MARGIN, H - 70, meta.get("subtitle", ""), 10.5, color=MUTED)
+    for i, line in enumerate(subtitle):
+        put(MARGIN, H - 70 - 15 * i, line, 10.5, color=MUTED)
     source = " · ".join(filter(None, [meta.get("source") and "Source: " + meta["source"],
                                       meta.get("as_of") and "as of " + meta["as_of"]]))
     put(MARGIN, 20, source, 6.5, color=MUTED)
@@ -399,7 +451,7 @@ def main(path):
         callouts.append(dict(mid=mid, r=r, color=color, lines=lines, side=1 if np.cos(mid) >= 0 else -1,
                              y=r_lab * np.sin(mid), h=sum(f for _, f, _ in lines) * PITCH))
     for gi, g in enumerate(root.children):
-        if depth == 3:
+        if depth == 3 and len(g.children) > 1:  # an only subgroup spans the group's own arc
             for sub in g.children:
                 arc(sub, r_sub, PALETTE[gi][1], 0.7, False)
         arc(g, r_grp, PALETTE[gi][1], 1.6, True)
@@ -422,13 +474,16 @@ def main(path):
         col, row = divmod(i, rows)
         put(MARGIN + col * (col_w + 18), cy - (r_lab + 30) - 14 - row * key_f * 1.4, s, key_f, bold)
 
-    out = Path(path).with_suffix("")
-    fig.savefig(f"{out}.png", dpi=300, facecolor="white")
-    fig.savefig(f"{out}.svg", facecolor="white", metadata={"Date": None})
+    out = Path(out or Path(path).with_suffix(""))
+    options = {"png": dict(dpi=300), "svg": dict(metadata={"Date": None}),
+               "pdf": dict(metadata={"CreationDate": None})}
+    for fmt in formats:
+        fig.savefig(f"{out}.{fmt}", facecolor="white", **options[fmt])
+    plt.close(fig)
     print(f"{len(root.leaves())} cells in {len(root.children)} groups, total {money(root.value, meta)}")
     print(f"max area error {err:.2e} (limit {LEAF_TOL:.0e})")
     print(f"labels: {tiers[0]} in cell, {tiers[1]} by key number, {tiers[2]} key only")
-    print(f"wrote {out}.png {out}.svg")
+    print("wrote " + " ".join(f"{out}.{fmt}" for fmt in formats))
 
 
 if __name__ == "__main__":

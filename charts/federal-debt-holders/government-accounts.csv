@@ -1,0 +1,145 @@
+# Every US government account in MSPD Table III at 2025-03-31, with the program it is drawn under in debt.csv. $ billions.
+program,fund,value
+Social Security,Federal Old-Age And Survivors Insurance Trust Fund,2485.544908
+Social Security,Federal Disability Insurance Trust Fund,192.937848
+Social Security,"Social Security Equivalent Benefit Account, Railroad Retirement Board",1.256285
+Social Security,Railroad Retirement Account,0.775593
+Medicare,Federal Hospital Insurance Trust Fund,236.164343
+Medicare,Federal Supplementary Medical Insurance Trust Fund,176.341234
+Military and veterans,Department Of Defense Military Retirement Fund,1795.106017
+Military and veterans,"Department Of Defense, Medicare Eligible Retiree Fund",412.511221
+Military and veterans,Servicemen's Group Life Insurance Fund,4.572377
+Military and veterans,"Department Of Defense, Education Benefits Fund",0.7061
+Military and veterans,"Veterans Special Life Insurance Fund, Trust Revolving Fund, Department Of Veterans Affairs",0.601103
+Military and veterans,"National Service Life Insurance Fund, Department Of Veterans Affairs",0.485846
+Military and veterans,Armed Forces Retirement Home Trust Fund,0.180624
+Military and veterans,"Veteran Affairs Life Insurance, Veterans Benefits Administration, Veterans Affairs",0.114978
+Military and veterans,"General Post Fund, National Homes, Department Of Veterans Affairs",0.089296
+Military and veterans,Court Of Veterans Appeals Retirement Fund,0.068213
+Military and veterans,"Voluntary Separation Incentive Fund, Defense",0.034277
+Military and veterans,Veterans Reopened Insurance Fund,0.022768
+Military and veterans,"United States Government Life Insurance Fund, Department Of Veterans Affairs",0.001286
+Civilian retirement and benefits,"Civil Service Retirement And Disability Fund, Office Of Personnel Management",1019.890257
+Civilian retirement and benefits,"Employees' Life Insurance Fund, Office Of Personnel Management",56.513449
+Civilian retirement and benefits,Postal Service Retiree Health Benefits Fund,25.088939
+Civilian retirement and benefits,"Employees' Health Benefits Fund, Office Of Personnel Management",23.895325
+Civilian retirement and benefits,Foreign Service Retirement And Disability Fund,21.672592
+Civilian retirement and benefits,District Of Columbia Federal Pension Trust Fund,4.28482
+Civilian retirement and benefits,Judicial Officers Retirement Fund,1.647519
+Civilian retirement and benefits,Judicial Survivors Annuities Fund,0.725113
+Civilian retirement and benefits,"Foreign Service National Defined Contributions Retirement Fund, State",0.429236
+Civilian retirement and benefits,District Of Columbia Judges Retirement Fund,0.214179
+Civilian retirement and benefits,Claims Court Judges Retirement Fund,0.045532
+Civilian retirement and benefits,Tax Court Judges Survivors Annuity Fund,0.013924
+Civilian retirement and benefits,"Retired Employees' Health Benefits Fund, Office Of Personnel Management",0.002946
+Insurance and guarantee funds,"FHA, Mutual Mortgage Insurance Capital Reserve Account, Housing and Urban Development",161.70718
+Insurance and guarantee funds,Deposit Insurance Fund,103.71162
+Insurance and guarantee funds,Pension Benefit Guaranty Corporation,65.094615
+Insurance and guarantee funds,"Guarantees Of Mortgage-Backed Securities Capital Reserve Account, Government National Mortgage",25.113556
+Insurance and guarantee funds,National Credit Union Share Insurance Fund,23.705675
+Insurance and guarantee funds,"Farm Credit Insurance Fund, Capital Corporation Investment Fund, Farm Credit Administration",8.136557
+Insurance and guarantee funds,Aviation Insurance Revolving Fund,2.588982
+Insurance and guarantee funds,"FSLIC Resolution Fund, The",1.00548
+Insurance and guarantee funds,"Central Liquidity Facility, National Credit Union Administration",0.994396
+Insurance and guarantee funds,"Guarantees Of Mortgage-Backed Securities Fund, Government National Mortgage Association, Housing And Urban Development",0.126061
+Insurance and guarantee funds,"War-Risk Insurance Revolving Fund, Maritime Administration",0.055862
+Transport and environment,Highway Trust Fund,90.374621
+Transport and environment,"Nuclear Waste Disposal Fund, Department Of Energy",73.714938
+Transport and environment,Airport And Airway Trust Fund,14.697395
+Transport and environment,"Abandoned Mines Reclamation Fund, Office Of Surface Mining Reclamation And Enforcement",14.056005
+Transport and environment,Hazardous Substance Superfund,11.743953
+Transport and environment,Harbor Maintenance Trust Fund,11.273092
+Transport and environment,Oil Spill Liability Trust Fund,10.39532
+Transport and environment,National Parks and Public Lands Legacy Restoration Fund,7.251799
+Transport and environment,"Federal Aid To Wildlife Restoration, United States Fish And Wildlife Service",2.94
+Transport and environment,Sport Fish Restoration And Boating Trust Fund,2.487226
+Transport and environment,"Natural Resource Damage Assessment And Restoration Fund, U.S. Fish And Wildlife Service, Interior",2.468007
+Transport and environment,Gulf Coast Restoration Trust Fund,2.388954
+Transport and environment,Southern Nevada Public Land Management Act Of 1998,1.78341
+Transport and environment,Leaking Underground Storage Tank Trust Fund,1.726576
+Transport and environment,Environmental Improvement And Restoration Fund,1.686416
+Transport and environment,"Bonneville Power Administration Fund, Power Marketing Administration, Dept Of Energy",0.769
+Transport and environment,"Lower Colorado River Basin Development Fund, Bureau Of Reclamation",0.525472
+Transport and environment,Reclamation Water Settlements Fund,0.487405
+Transport and environment,Inland Waterways Trust Fund,0.40094
+Transport and environment,"Expenses, Presidio Trust",0.355334
+Transport and environment,Indian Irrigation Fund,0.239892
+Transport and environment,Blackfeet Water Settlement Implementation Fund,0.235886
+Transport and environment,"Uranium Enrichment And Decommissioning Fund, Department Of Energy",0.218135
+Transport and environment,High-Hazard Indian Dam Safety Deferred Maintenance Fund,0.206109
+Transport and environment,"Utah Reclamation Mitigation And Conservation Account, Interior",0.127997
+Transport and environment,South Dakota Terrestrial Wildlife Habitat Restoration Trust Fund,0.1192
+Transport and environment,Low-Hazard Indian Dam Safety Deferred Maintenance Fund,0.090598
+Transport and environment,"Operation And Maintenance, Indian Irrigation Systems, Bureau Of Indian Affairs",0.055905
+Transport and environment,Morris K. Udall Scholarship And Excellence In National Environmental Policy Trust Fund,0.051478
+Transport and environment,"Reregistration And Expedited Processing Fund, Environmental Protection Agency Management",0.045861
+Transport and environment,Cheyenne River Sioux Tribe Terrestrial Wildlife Habitat Restoration Trust Fund,0.045237
+Transport and environment,"Power Systems, Indian Irrigation Projects, Bureau Of Indian Affairs",0.031918
+Transport and environment,Lincoln County Land Act,0.029188
+Transport and environment,Lower Brule Sioux Tribe Terrestrial Wildlife Habitat Restoration Trust Fund,0.015806
+Transport and environment,Land Between The Lakes Trust Fund,0.006479
+Transport and environment,"Environmental Dispute Resolution Fund, Morris K. Udall Scholarship And Excellence In National Environmental Policy Foundation",0.005
+Transport and environment,Pesticide Registration Fund,0.004169
+Unemployment insurance,Unemployment Trust Fund,78.77014
+Other accounts,Marketable securities held by government accounts,20.168952
+Other accounts,"Exchange Stabilization Fund, Office Of The Secretary, Treasury",20.068927
+Other accounts,Child Enrollment Contingency Fund,18.207461
+Other accounts,Postal Service Fund,15.566205
+Other accounts,"Corporate Capital Account, United States International Development Finance Corporation",7.083405
+Other accounts,Treasury Forfeiture Fund,4.712652
+Other accounts,Vaccine Injury Compensation Trust Fund,4.708357
+Other accounts,"Seized Assets Fund, Justice",4.696404
+Other accounts,Disgorgement Penalty Amounts Held For Investment,4.205845
+Other accounts,"Assets Forfeiture Fund, Justice",3.208187
+Other accounts,United States Victims Of State Sponsored Terrorism Fund,2.961196
+Other accounts,USPS Vehicle Fund - HR,2.425356
+Other accounts,"Assessment Funds, Office Of The Comptroller Of The Currency",2.243614
+Other accounts,"Seized Currency, United States Customs Service",1.57882
+Other accounts,"National Service Trust, Corporation For National And Community Services",1.270765
+Other accounts,"Financial Integrity Fund, Financial Crimesenforcement Network, Treasury",0.93844
+Other accounts,Energy Employees Occupational Illness Compensation Fund,0.855804
+Other accounts,Support For U.S. Relocation To Guam Activities,0.713811
+Other accounts,"Postal Service Fund, Debt Service Reserve Account",0.568874
+Other accounts,Securities And Exchange Commission Investor Protection Fund,0.350913
+Other accounts,"Prison Industries Fund, Department Of Justice",0.318
+Other accounts,Native American Institutions Endowment Fund,0.283712
+Other accounts,"Commodity Futures Trading Commission Customer Protection Fund, Commodity Futures Trading Commission",0.244
+Other accounts,Federal Housing Finance Board Working Capital Fund,0.220372
+Other accounts,Host Nation Support For U.S. Relocation Activities Account,0.144275
+Other accounts,"United States Trustee System Fund, Justice",0.137819
+Other accounts,Financial Research Fund,0.126989
+Other accounts,Patient-Centered Outcomes Research Trust Fund,0.094697
+Other accounts,"Trust Fund, The Barry Goldwater Scholarship And Excellence In Education Fund",0.0724
+Other accounts,"Operating Fund, National Credit Union Administration",0.062352
+Other accounts,Deposit Of Revenues Received From Mineral Leases On Lands Withdrawn For Alaskan Native Selection,0.060558
+Other accounts,"Harry S. Truman Memorial Scholarship Trust Fund, Harry S. Truman Scholarship Foundation",0.053473
+Other accounts,Library Of Congress Gift Fund,0.052922
+Other accounts,"Revolving Fund For Administrative Expense, Farm Credit Administration",0.046692
+Other accounts,National Institutes Of Health Unconditional Gift Fund,0.046477
+Other accounts,James Madison Memorial Fellowship Foundation Fund,0.037341
+Other accounts,"Japan-United States Friendship Trust Fund, Japan-United States Friendship Commission",0.034726
+Other accounts,"Conditional Gift Fund, General, Department Of State",0.026888
+Other accounts,"International Center, Washington, D.C., State",0.019919
+Other accounts,John C. Stennis Center For Public Service Training And Development,0.017881
+Other accounts,"National Gift Fund, National Archives And Records Administration",0.01696
+Other accounts,"Science, Space And Technology Education Trust Fund, National Aeronautics And Space Administration",0.015669
+Other accounts,Capitol Visitor Center Revolving Fund,0.015656
+Other accounts,Library Of Congress Trust Fund,0.015556
+Other accounts,"Capitol Preservation Fund, U.S. Capitol Preservation Commission",0.012746
+Other accounts,"Unearned Copyright Fees, Library Of Congress",0.010802
+Other accounts,Community Development Credit Union Revolving Fund National Credit Union Administration,0.01034
+Other accounts,"Defense Cooperation Account, Defense",0.009171
+Other accounts,International Center For Middle Eastern-Western Dialogue Trust Fund,0.008894
+Other accounts,Eisenhower Exchange Fellowship Program Trust Fund,0.007955
+Other accounts,"National Archives Trust Fund, National Archives And Records Administration",0.007697
+Other accounts,Panama Canal Commission Compensation Fund,0.00712
+Other accounts,Congressional Office For International Leadership,0.005849
+Other accounts,"Israeli Arab Scholarship Program, United States Information Agency",0.004979
+Other accounts,United States Naval Academy General Gift Fund,0.003186
+Other accounts,"Gifts And Bequests, Treasury",0.002492
+Other accounts,National Security Education Trust Fund,0.002134
+Other accounts,Department Of The Army General Gift Fund,0.001623
+Other accounts,Coast Guard General Gift Fund,0.001047
+Other accounts,"Smithsonian Endowment Fund, Smithsonian Institution",0.001039
+Other accounts,"Patients Benefit Fund, National Institutes Of Health",0.000683
+Other accounts,Senate Preservation Trust Fund,0.000565
