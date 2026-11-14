@@ -320,7 +320,7 @@ def main(path):
     for g in root.children:
         g_lines = []
         for sub in (g.children if depth == 3 else [g]):
-            s_lines = []
+            s_lines, in_key = [], set()
             for leaf in sub.leaves():
                 val, c = money(leaf.value, meta), centroid(leaf.poly)
                 def best(aspect):
@@ -347,6 +347,7 @@ def main(path):
                         lines = []
                     tiers[1 if lines else 2] += 1
                     s_lines.append((f"{mark}  {leaf.name}  {val}", False))
+                    in_key.add(leaf.name)
                 else:
                     tiers[0] += 1
                 for i, (s, bold) in enumerate(lines):
@@ -356,10 +357,14 @@ def main(path):
                     x0, y0, x1, y1 = np.array(rects[1]) * f
                     images.append((leaf.icon, (c[0] + x0, c[0] + x1, c[1] + y0, c[1] + y1)))
             sub.arc = max(rim_runs(sub.poly, c0), key=lambda r: r[1] - r[0], default=None)
-            if depth == 3 and (s_lines or (sub.arc is None and len(sub.children) > 1)):
+            # A subgroup gets its own key line unless the group line or its
+            # only leaf's line already says the same thing.
+            redundant = sub.name == g.name or [l.name for l in sub.leaves()] == [sub.name]
+            if depth == 3 and not redundant and (s_lines or (sub.arc is None and len(sub.children) > 1)):
                 head = f"{sub.name}  {money(sub.value, meta)}"
-                if sub.arc is None:  # no rim arc to carry the name: list members here
-                    head += ": " + ", ".join(l.name for l in sub.leaves())
+                drawn = [l.name for l in sub.leaves() if l.name not in in_key]
+                if sub.arc is None and drawn:  # no rim arc to carry the name: name the labelled members
+                    head += ": " + ", ".join(drawn)
                 g_lines += [(head, False)] + [("   " + s, b) for s, b in s_lines]
             else:
                 g_lines += s_lines
