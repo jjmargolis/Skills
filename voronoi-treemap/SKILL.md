@@ -49,7 +49,7 @@ Writes `data.png` (300 dpi) and `data.svg` beside the CSV and prints the cell co
 
 ## 4. What the script guarantees
 
-Full statement and proofs are in `PROOF.md`.
+Full statements and proofs are in `PROOF.pdf` (source: `PROOF.tex`).
 
 - **Size.** Area is linear in value at every level. The script measures each finished cell and fails if any is more than 0.1% off.
 - **Placement.** Each parent region is cut into power-diagram cells, so cells are convex, do not overlap, leave no gaps and stay inside their group. Position carries no data.

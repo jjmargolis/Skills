@@ -1,0 +1,587 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype}
+\usepackage[margin=27mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,enumitem}
+\usepackage[hidelinks]{hyperref}
+\setlist{itemsep=2pt,topsep=4pt}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\area}{\lambda}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\newcommand{\interior}{\operatorname{int}}
+\newcommand{\conv}{\operatorname{conv}}
+\newcommand{\ch}{\operatorname{ch}}
+\newcommand{\leaves}{\operatorname{L}}
+
+\title{Correctness of the circular Voronoi treemap layout}
+\author{}
+\date{16 November 2026}
+
+\begin{document}
+\maketitle
+
+\noindent
+This note states and proves what the program \texttt{voronoi\_treemap.py}
+guarantees about the picture it draws: a disc cut into convex cells, one per
+leaf of a weighted tree, with area proportional to weight. It separates four
+kinds of statement, and the table says which is which.
+
+\begin{center}
+\small\begin{tabular}{@{}p{7.6cm}p{2.3cm}p{4.6cm}@{}}
+\toprule
+Statement & Where & Status \\
+\midrule
+Cells are convex, tile their parent, do not overlap & Thm.~\ref{thm:power}, \ref{thm:nest} & proved here \\
+Area error at any node is at most the leaf error & Thm.~\ref{thm:additive} & proved here \\
+Weights with the exact target areas exist and are unique & Thm.~\ref{thm:weights} & proved here \\
+The output satisfies the area bound whenever the program returns & Thm.~\ref{thm:partial} & proved here \\
+The iteration always terminates & Rem.~\ref{rem:termination} & \emph{not proved}; cited \\
+Formula for the derivative of area in the weights & Prop.~\ref{prop:derivative} & one-sided proof; not relied on \\
+Label block lies inside its cell; largest font in closed form & Thm.~\ref{thm:label} & proved here \\
+Glyphs lie inside the label block & Asm.~\ref{asm:type} & assumed; measured \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Notation and terminology}
+
+Points and vectors are in $\R^2$; $x\cdot y$ is the Euclidean inner product and
+$\norm{x}$ the Euclidean norm. For a measurable set $A\subseteq\R^2$,
+$\area(A)$ is its area (Lebesgue measure). Bars are never used for area in
+this note, so that area and length cannot be confused. $\interior A$ is the
+topological interior, $\conv A$ the convex hull, and $B(x,r)$ the open ball. A \emph{convex polygon} is a compact intersection of
+finitely many closed half-planes; it may be empty or have empty interior.
+A \emph{convex body} is a compact convex set with non-empty interior. Two
+standard facts are used: a convex set in $\R^2$ with empty interior lies in a
+line and so has area zero; and the interior of a convex body is dense in it.
+
+\begin{remark}[Words]\label{rem:words}
+The program's input columns are named \texttt{group} and \texttt{subgroup}.
+These are column labels for the first two levels of a rooted tree and have no
+algebraic meaning. This note says \emph{node}, \emph{parent}, \emph{child} and
+\emph{leaf} throughout.
+\end{remark}
+
+\section{Setting}
+
+\begin{definition}[Weighted tree]
+$T$ is a finite rooted tree with root $\rho$. $\ch(u)$ is the set of children
+of a node $u$, and $\leaves(u)$ the set of leaves in the subtree of $u$. Each
+leaf $\ell$ carries a value $v(\ell)>0$, and $v(u)=\sum_{\ell\in\leaves(u)}v(\ell)$
+for every node $u$. In the program $T$ has depth $2$ or $3$; nothing below
+uses that.
+\end{definition}
+
+\begin{definition}[Domain]
+$\Omega$ is the regular $N$-gon inscribed in the circle of radius $R$ about the
+origin, with $N=360$. It is a convex body with
+$\area(\Omega)=\tfrac{N}{2}R^2\sin\tfrac{2\pi}{N}$. Its area falls short of the
+disc's by the factor $1-\frac{\sin\theta}{\theta}\le\theta^2/6<5.1\times10^{-5}$,
+$\theta=2\pi/N$. Every statement below is about $\Omega$, which is also what
+is drawn; the circle plays no further role.
+\end{definition}
+
+\begin{definition}[Layout]\label{def:layout}
+A \emph{layout} assigns to each node $u$ a convex polygon $K(u)$ such that
+$K(\rho)=\Omega$ and, for every node $u$ with children $u_1,\dots,u_k$,
+\begin{enumerate}[label=(L\arabic*)]
+\item $K(u_i)\subseteq K(u)$ for each $i$;
+\item $\area\bigl(K(u_i)\cap K(u_j)\bigr)=0$ for $i\ne j$;
+\item $K(u_1)\cup\dots\cup K(u_k)=K(u)$.
+\end{enumerate}
+Write $c=\area(\Omega)/v(\rho)$. The \emph{relative area error} of a node is
+$\delta(u)=\area(K(u))/(c\,v(u))-1$. The layout is \emph{exact} if
+$\delta\equiv 0$ and \emph{$\varepsilon$-exact} if $\lvert\delta(\ell)\rvert\le\varepsilon$
+for every leaf $\ell$.
+\end{definition}
+
+In an exact layout $\area(K(u))=c\,v(u)$: area is a linear function of value
+with zero intercept and the same constant $c$ at every level. That is the
+encoding claim of the chart.
+
+\section{Power diagrams partition a convex polygon}
+
+\begin{definition}[Power cells]\label{def:power}
+Let $P$ be a convex body, $s_1,\dots,s_k\in\R^2$ pairwise distinct
+(\emph{sites}) and $w\in\R^k$ (\emph{weights}). Put
+$\pi_i(x)=\norm{x-s_i}^2-w_i$ and
+\[
+  C_i(w)=\{x\in P:\ \pi_i(x)\le\pi_j(x)\ \text{for all } j\}.
+\]
+\end{definition}
+
+\begin{lemma}\label{lem:affine}
+For $i\ne j$, $\pi_i-\pi_j$ is a non-constant affine function:
+$\pi_i(x)-\pi_j(x)=2(s_j-s_i)\cdot x+\norm{s_i}^2-\norm{s_j}^2-w_i+w_j$.
+Hence $\{\pi_i\le\pi_j\}$ is a closed half-plane and
+$H_{ij}(w)=\{\pi_i=\pi_j\}$ is a line.
+\end{lemma}
+\begin{proof}
+Expand the squares; $\norm{x}^2$ cancels. The gradient $2(s_j-s_i)$ is non-zero
+because the sites are distinct.
+\end{proof}
+
+\begin{theorem}\label{thm:power}
+In the setting of Definition~\ref{def:power}:
+\begin{enumerate}[label=(\alph*)]
+\item each $C_i(w)$ is a convex polygon contained in $P$;
+\item $\bigcup_i C_i(w)=P$;
+\item for $i\ne j$, $C_i(w)\cap C_j(w)\subseteq H_{ij}(w)$, so it has area
+      zero and $\interior C_i(w)\cap\interior C_j(w)=\emptyset$;
+\item $\sum_i\area(C_i(w))=\area(P)$, and more generally
+      $\area\bigl(\bigcup_{i\in I}C_i(w)\bigr)=\sum_{i\in I}\area(C_i(w))$ for
+      every index set $I$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(a) By Lemma~\ref{lem:affine}, $C_i(w)$ is the intersection of $P$ with $k-1$
+closed half-planes.
+(b) For $x\in P$ the finite set $\{\pi_1(x),\dots,\pi_k(x)\}$ has a least
+element $\pi_i(x)$, and then $x\in C_i(w)$.
+(c) If $x\in C_i(w)\cap C_j(w)$ then $\pi_i(x)\le\pi_j(x)\le\pi_i(x)$, so
+$x\in H_{ij}(w)$, a line, which has area zero and contains no open set.
+(d) By inclusion--exclusion, the area of a finite union differs from the sum of
+the areas by terms that are areas of subsets of pairwise intersections; these
+vanish by (c). The first statement follows with (b).
+\end{proof}
+
+\section{The nested layout}
+
+The program builds $K$ top-down. $K(\rho)=\Omega$. For a node $u$ with
+$\area(K(u))>0$ and children $u_1,\dots,u_k$, it chooses distinct sites in
+$K(u)$ and weights $w$, and sets $K(u_i)=C_i(w)$ computed in $P=K(u)$. (If
+$k=1$ it sets $K(u_1)=K(u)$.) It only recurses into cells of positive area.
+
+\begin{theorem}\label{thm:nest}
+The assignment $K$ so constructed is a layout. Moreover, for every node $u$,
+the polygons $K(\ell)$, $\ell\in\leaves(u)$, are convex, lie in $K(u)$, cover
+$K(u)$, and pairwise intersect in sets of area zero. In particular the leaf
+cells tile $\Omega$, and each leaf cell lies inside the cell of each of its
+ancestors.
+\end{theorem}
+\begin{proof}
+(L1)--(L3) at each node are Theorem~\ref{thm:power}(a)--(c), applied with
+$P=K(u)$; this is legitimate because $K(u)$ is a convex polygon by
+Theorem~\ref{thm:power}(a) one level up, and has non-empty interior since its
+area is positive. For the second statement, induct on the height of $u$. If $u$
+is a leaf there is nothing to prove. Otherwise, containment and covering follow
+from (L1), (L3) and the induction hypothesis for the children. If
+$\ell\ne\ell'$ are leaves below the same child, their intersection is null by
+induction. If they lie below different children $u_i\ne u_j$, then
+$K(\ell)\cap K(\ell')\subseteq K(u_i)\cap K(u_j)$, which is null by (L2).
+\end{proof}
+
+\begin{theorem}[Additivity and error propagation]\label{thm:additive}
+In any layout, $\area(K(u))=\sum_{\ell\in\leaves(u)}\area(K(\ell))$ for every
+node $u$. Consequently
+\[
+  \delta(u)=\sum_{\ell\in\leaves(u)}\frac{v(\ell)}{v(u)}\,\delta(\ell),
+\]
+a convex combination, so $\lvert\delta(u)\rvert\le\max_{\ell\in\leaves(u)}\lvert\delta(\ell)\rvert$.
+An $\varepsilon$-exact layout has $\lvert\delta(u)\rvert\le\varepsilon$ at
+\emph{every} node, and $\delta(\rho)=0$.
+\end{theorem}
+\begin{proof}
+By Theorem~\ref{thm:nest} the leaf cells below $u$ cover $K(u)$ with pairwise
+null intersections, which gives the first identity as in
+Theorem~\ref{thm:power}(d). Then
+$\area(K(u))=\sum_\ell c\,v(\ell)(1+\delta(\ell))
+ =c\,v(u)+c\sum_\ell v(\ell)\delta(\ell)$; divide by $c\,v(u)$. The weights
+$v(\ell)/v(u)$ are positive and sum to one. Finally
+$\area(K(\rho))=\area(\Omega)=c\,v(\rho)$.
+\end{proof}
+
+So it suffices to control the leaves, and controlling the leaves controls
+every level of the hierarchy by the same bound.
+
+\section{Exact weights exist and are unique}
+
+Fix a convex body $P$, distinct sites $s_1,\dots,s_k$, and targets
+$t_1,\dots,t_k>0$ with $\sum_i t_i=\area(P)$. Define
+\[
+  g(x,w)=\min_{1\le i\le k}\bigl(\norm{x-s_i}^2-w_i\bigr),\qquad
+  \Phi(w)=\int_P g(x,w)\,dx+\sum_{i=1}^k w_i t_i .
+\]
+
+\begin{theorem}\label{thm:weights}
+\begin{enumerate}[label=(\alph*)]
+\item $\Phi$ is concave and continuously differentiable on $\R^k$, with
+      $\partial\Phi/\partial w_i=t_i-\area(C_i(w))$.
+\item $\Phi(w+\alpha\mathbf{1})=\Phi(w)$ for all $\alpha\in\R$, where
+      $\mathbf 1=(1,\dots,1)$.
+\item $\Phi$ attains its maximum, and $w$ is a maximiser if and only if
+      $\area(C_i(w))=t_i$ for all $i$. In particular such weights exist.
+\item If $w$ and $w'$ both satisfy $\area(C_i(\cdot))=t_i$ for all $i$, then
+      $w'-w$ is a multiple of $\mathbf 1$, and $C_i(w')=C_i(w)$ for all $i$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\emph{(a) Concavity.} For fixed $x$, $g(x,\cdot)$ is a minimum of affine
+functions of $w$, hence concave; integrals and sums of concave functions are
+concave.
+
+\emph{(a) Differentiability.} Let
+$Z(w)=P\cap\bigcup_{i<j}H_{ij}(w)$, a null set. Fix $w$ and $x\in P\setminus Z(w)$.
+The minimum defining $g(x,w)$ is attained at a unique index $i(x)$, with a
+positive gap to the others, so for $w'$ close to $w$ it is still attained only
+at $i(x)$ and $g(x,w')=\norm{x-s_{i(x)}}^2-w'_{i(x)}$. Thus $g(x,\cdot)$ is
+differentiable at $w$ with
+$\partial g/\partial w_j=-\mathbf 1_{C_j(w)}(x)$. Since
+$\lvert\min_i a_i-\min_i b_i\rvert\le\max_i\lvert a_i-b_i\rvert$, difference
+quotients of $g(x,\cdot)$ are bounded by $1$, and dominated convergence gives
+$\frac{\partial}{\partial w_j}\int_P g\,dx=-\area(C_j(w))$. For continuity of
+this partial derivative, let $w_n\to w$. For $x\in P\setminus Z(w)$ the same
+gap argument gives $\mathbf 1_{C_j(w_n)}(x)\to\mathbf 1_{C_j(w)}(x)$, and
+dominated convergence gives $\area(C_j(w_n))\to\area(C_j(w))$. A function with
+continuous partial derivatives is $C^1$.
+
+\emph{(b)} $g(x,w+\alpha\mathbf 1)=g(x,w)-\alpha$, so
+$\Phi(w+\alpha\mathbf 1)=\Phi(w)-\alpha\area(P)+\alpha\sum_i t_i=\Phi(w)$.
+
+\emph{(c)} Let $D^2=\max\{\norm{x-s_i}^2: x\in P,\ 1\le i\le k\}$ and
+$t_{\min}=\min_i t_i>0$. Taking the index with the largest weight in the
+minimum, $g(x,w)\le D^2-\max_i w_i$. Using $\sum_i t_i=\area(P)$,
+\[
+  \Phi(w)\le \area(P)D^2-\sum_i t_i\bigl(\max_m w_m-w_i\bigr)
+  \le \area(P)D^2-t_{\min}\bigl(\max_m w_m-\min_m w_m\bigr).
+\]
+On the hyperplane $E=\{\sum_i w_i=0\}$ we have $\max_m w_m\ge 0\ge\min_m w_m$,
+so $\max_m w_m-\min_m w_m\ge\norm{w}_\infty$ and $\Phi(w)\to-\infty$ as
+$\norm{w}_\infty\to\infty$ in $E$. A continuous function on $E$ with this
+property attains its maximum on $E$, and by (b) that is a maximum over
+$\R^k$. For a differentiable concave function, maximisers are exactly the
+points with zero gradient; by (a) these are the $w$ with
+$\area(C_i(w))=t_i$ for all $i$.
+
+\emph{(d)} Write $C_i=C_i(w)$, $C'_i=C_i(w')$, $\delta=w'-w$, and
+$\pi'_i=\pi_i-\delta_i$ for the power functions of $w'$. Suppose $\delta$ is
+not constant. Let $\bar\delta=\max_i\delta_i$,
+$I=\{i:\delta_i=\bar\delta\}$ and $J=\{1,\dots,k\}\setminus I$; both are
+non-empty, and $\eta=\bar\delta-\max_{j\in J}\delta_j>0$. Put
+$U=\bigcup_{i\in I}C_i$, $V=\bigcup_{j\in J}C_j$ and
+$U'=\bigcup_{i\in I}C'_i$.
+
+\emph{Step 1: $U\subseteq U'$.} Let $x\in C_i$ with $i\in I$. For $j\in J$,
+$\pi'_i(x)=\pi_i(x)-\bar\delta\le\pi_j(x)-\bar\delta<\pi_j(x)-\delta_j=\pi'_j(x)$.
+So the least of the $\pi'_m(x)$ is attained at an index in $I$, i.e.\ $x\in U'$.
+
+\emph{Step 2: a ball inside $U'$ centred on the interface.} $U$ and $V$ are
+closed, non-empty (their areas are sums of positive targets) and cover the
+connected set $P$, so $U\cap V\ne\emptyset$. Take $x_0\in C_i\cap C_j$ with
+$i\in I$, $j\in J$, and let $m=\pi_i(x_0)=\pi_j(x_0)=\min_n\pi_n(x_0)$. Then
+$\min_{n\in I}\pi'_n(x_0)\le m-\bar\delta$, while for $n\in J$,
+$\pi'_n(x_0)\ge m-\delta_n\ge m-\bar\delta+\eta$. By continuity there is $r>0$
+with $\min_{n\in I}\pi'_n<\min_{n\in J}\pi'_n$ on $B(x_0,r)$, hence
+$B(x_0,r)\cap P\subseteq U'$.
+
+\emph{Step 3: contradiction.} $C_j$ is convex with $\area(C_j)=t_j>0$, so it
+is a convex body, its interior is dense in it, and
+$G=B(x_0,r)\cap\interior C_j$ is a non-empty open set; $\area(G)>0$. By Step 2,
+$G\subseteq U'$. Also $G\cap U\subseteq\bigcup_{n\in I}(C_n\cap C_j)$ is null by
+Theorem~\ref{thm:power}(c). With Step 1,
+$\area(U')\ge\area(U\cup G)=\area(U)+\area(G)>\area(U)$. But by
+Theorem~\ref{thm:power}(d), $\area(U)=\sum_{i\in I}t_i=\area(U')$.
+Contradiction. Hence $\delta$ is constant, and adding a constant to all
+weights does not change any $C_i$.
+\end{proof}
+
+\begin{corollary}\label{cor:exact}
+For every weighted tree and every choice of distinct sites at each node, an
+exact layout exists, and given the sites it is unique.
+\end{corollary}
+\begin{proof}
+Apply Theorem~\ref{thm:weights}(c),(d) at each node from the root down with
+$t_i=\area(K(u))\,v(u_i)/v(u)$; these are positive and sum to $\area(K(u))$,
+so every child cell has positive area and is a convex body. Exactness follows
+by induction: $\area(K(u_i))=c\,v(u)\cdot v(u_i)/v(u)=c\,v(u_i)$.
+\end{proof}
+
+\begin{remark}
+Theorem~\ref{thm:weights} is the planar, uniform-density case of a result of
+Aurenhammer, Hoffmann and Aronov~\cite{AHA}; the proof above is self-contained
+and does not use theirs.
+\end{remark}
+
+\section{What the algorithm guarantees}
+
+For one node, with $P$, targets $t$ and tolerance $\tau$, the program does the
+following. $A(w)=(\area(C_1(w)),\dots,\area(C_k(w)))$, computed by the
+shoelace formula on the clipped polygons.
+
+\begin{enumerate}[label=\arabic*.]
+\item \emph{Start.} Sites are $k$ seeded pseudo-random points of $P$; $w=0$.
+\item \emph{Solve} (to tolerance $\tau'$). If some $A_i(w)=0$, reset $w=0$.
+      Let $\beta=\tfrac12\min(\min_i A_i(w),\min_i t_i)$. Repeat until
+      $\max_i\lvert A_i(w)/t_i-1\rvert<\tau'$: compute a direction $d$ from
+      the linear system of Proposition~\ref{prop:derivative}; for
+      $\theta=1,\tfrac12,\tfrac14,\dots$ accept $w\leftarrow w+\theta d$ at
+      the first $\theta$ with
+      \begin{equation}\label{eq:accept}
+        \min_i A_i(w+\theta d)\ge\beta
+        \quad\text{and}\quad
+        \norm{t-A(w+\theta d)}\le(1-\tfrac\theta2)\norm{t-A(w)} .
+      \end{equation}
+      Abort with an error if no $\theta\ge 10^{-9}$ is accepted or after 200
+      accepted steps.
+\item \emph{Relax.} 25 times: solve with $\tau'=0.1$, then move each site to
+      the centroid of its cell.
+\item \emph{Finish.} Solve with $\tau'=\tau=3\times10^{-4}$ and return the
+      cells.
+\end{enumerate}
+After the whole tree is laid out, the program computes $\delta(\ell)$ for
+every leaf from the returned polygons and aborts unless
+$\max_\ell\lvert\delta(\ell)\rvert<10^{-3}$.
+
+\begin{proposition}\label{prop:voronoi}
+If the sites are distinct points of $P$ and $w=0$, every cell has positive
+area.
+\end{proposition}
+\begin{proof}
+Let $r=\tfrac12\min_{j\ne i}\norm{s_i-s_j}>0$. For $x\in B(s_i,r)$ and $j\ne i$,
+$\norm{x-s_i}<r\le\norm{s_i-s_j}-r<\norm{x-s_j}$, so
+$B(s_i,r)\cap P\subseteq C_i(0)$. Since $s_i\in P$ and the interior of the
+convex body $P$ is dense in $P$, $B(s_i,r)\cap\interior P$ is a non-empty open
+set.
+\end{proof}
+
+\begin{proposition}\label{prop:centroid}
+The centroid of a convex body $K$ lies in $\interior K$. Hence after a
+relaxation step the sites are again distinct points of $P$.
+\end{proposition}
+\begin{proof}
+Let $z=\area(K)^{-1}\int_K x\,dx$. If $z\notin\interior K$, the supporting
+hyperplane theorem gives a unit vector $n$ with $n\cdot(x-z)\le 0$ for all
+$x\in K$. But $\int_K n\cdot(x-z)\,dx=0$ by the definition of $z$, so
+$n\cdot(x-z)=0$ for almost every $x\in K$, which puts $K$, up to a null set,
+in a line; this contradicts $\area(K)>0$. For the second statement, the
+relaxation step is applied to cells of area at least $\beta>0$, which are
+convex bodies with pairwise disjoint interiors
+(Theorem~\ref{thm:power}(c)); their centroids lie in those interiors and are
+therefore distinct, and they lie in $P$.
+\end{proof}
+
+\begin{theorem}[Partial correctness]\label{thm:partial}
+Suppose the program returns without aborting. Then, up to floating-point
+rounding (Assumption~\ref{asm:float}):
+\begin{enumerate}[label=(\alph*)]
+\item the returned polygons form a layout in the sense of
+      Definition~\ref{def:layout}, with all the properties of
+      Theorem~\ref{thm:nest};
+\item the layout is $\varepsilon$-exact with $\varepsilon=10^{-3}$, and
+      therefore $\lvert\delta(u)\rvert\le10^{-3}$ at every node $u$;
+\item during every solve, the residual $\norm{t-A(w)}$ strictly decreases at
+      each accepted step and no cell ever has area below $\beta>0$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(a) Whatever sites and weights the iteration ends with, the returned cells are
+power cells of distinct sites in a convex body, so
+Theorems~\ref{thm:power} and~\ref{thm:nest} apply. Distinctness holds at the
+start by Assumption~\ref{asm:sites} and is preserved by
+Proposition~\ref{prop:centroid}; every cell the program recurses into has
+positive area because its area is within a factor $1\pm\tau$ of a positive
+target.
+(b) The inequality $\max_\ell\lvert\delta(\ell)\rvert<10^{-3}$ is evaluated on
+the returned polygons and the program aborts if it is false; the bound at
+internal nodes is Theorem~\ref{thm:additive}.
+(c) Both properties are the acceptance test~\eqref{eq:accept}; $\beta>0$
+because the solve starts from cells of positive area, by
+Proposition~\ref{prop:voronoi} after a reset.
+\end{proof}
+
+The point of Theorem~\ref{thm:partial} is that the correctness of a drawn
+chart does not rest on any convergence theory: the area bound is a
+certificate checked on the output. Convergence theory only bears on whether
+the program finishes.
+
+\begin{remark}[Termination is not proved here]\label{rem:termination}
+The iteration in step~2 is the damped Newton method for semi-discrete optimal
+transport of Kitagawa, M\'erigot and Thibert~\cite{KMT}, whose acceptance
+rule~\eqref{eq:accept} is the one used. They prove global convergence at a
+linear rate under hypotheses that, as I recall them, include a density
+bounded away from zero on a convex domain and sites in general position. The
+present setting (uniform density on a convex polygon) is of that type, but I
+have not re-read the paper to verify each hypothesis, and the program moves
+the sites between solves, which their theorem does not cover. Termination is
+therefore an empirical statement: every run reported in
+Section~\ref{sec:numerics} terminated. When the iteration fails, the program
+aborts with an error; it never returns an unchecked layout.
+\end{remark}
+
+\begin{proposition}[Derivative of area; used only to propose steps]\label{prop:derivative}
+Let all cells have positive area, $i\ne j$, $d_{ij}=\norm{s_i-s_j}$ and
+$\ell_{ij}$ the length of the segment $C_i(w)\cap C_j(w)$. Then the
+right-hand derivative of $\area(C_i(w))$ in $w_j$ is
+$-\ell_{ij}/(2d_{ij})$.
+\end{proposition}
+\begin{proof}
+For $h>0$, raising $w_j$ by $h$ replaces the constraint $\pi_i\le\pi_j$ by
+$\pi_i\le\pi_j-h$ and leaves the other constraints of $C_i$ unchanged, so the
+set removed from $C_i$ is $\{x\in C_i: 0\le\pi_j(x)-\pi_i(x)<h\}$. By
+Lemma~\ref{lem:affine}, $\pi_j-\pi_i$ is affine with gradient of norm
+$2d_{ij}$, so this set is the part of $C_i$ within distance $h/(2d_{ij})$ of
+the line $H_{ij}$. Let $L(s)$ be the length of the chord of $C_i$ at distance
+$s$ from $H_{ij}$. By Fubini the removed area is $\int_0^{h/(2d_{ij})}L(s)\,ds$.
+$L$ is concave on its support (chords of a planar convex set) and upper
+semicontinuous at $0$ (compactness), hence continuous at $0$ with
+$L(0)=\ell_{ij}$. Dividing by $h$ and letting $h\downarrow0$ gives the claim.
+\end{proof}
+
+The program assembles the matrix $M$ with $M_{ij}=-\ell_{ij}/(2d_{ij})$ for
+$i\ne j$ and $M_{ii}=-\sum_{j\ne i}M_{ij}$, and solves $Md=t-A$ with $d_1=0$.
+Proposition~\ref{prop:derivative} is not needed for any guarantee: a poor
+direction can only cause rejected steps or an abort, by~\eqref{eq:accept}.
+Against central finite differences on 20 random instances the entries of $M$
+agree to a relative $1.3\times10^{-7}$.
+
+\section{Labels}
+
+A label is a block of text centred on the centroid $z$ of its cell $K$, with
+an optional image above or below. At font size $f>0$ the block is
+$z+f\,U$, where $U\subset\R^2$ is a union of one or two axis-parallel
+rectangles determined by the text and independent of $f$:
+\begin{itemize}
+\item text of $n$ lines whose widest line has width $\omega$ per unit font
+      size: a rectangle of width $\omega$ and height $n\kappa$, $\kappa=1.18$;
+\item with an image of aspect ratio $\varrho$ (width over height): a second
+      rectangle of width $3.5\varrho$ and height $3.5$, separated from the
+      text by $0.3$, the pair centred vertically at $0$ and each centred
+      horizontally at $0$.
+\end{itemize}
+Let $V$ be the finite set of corners of the rectangles of $U$. Write
+$K=\bigcap_{e}\{x: n_e\cdot x\le b_e\}$ over the edges $e$ of $K$, with unit
+outward normals $n_e$, and for a padding $p\ge0$ let
+$K_p=\bigcap_e\{x:n_e\cdot x\le b_e-p\}$; this is the set of points of $K$ at
+distance at least $p$ from every edge line.
+
+\begin{lemma}\label{lem:rect}
+A rectangle $Q$ is contained in a convex set $A$ if and only if its four
+corners are.
+\end{lemma}
+\begin{proof}
+$Q$ is the convex hull of its corners.
+\end{proof}
+
+\begin{theorem}\label{thm:label}
+Let $K$ be a convex polygon with non-empty interior and centroid $z$, and put
+$\sigma_e=b_e-n_e\cdot z-p$ and $\mu_e=\max_{u\in V}n_e\cdot u$. Then
+$\mu_e>0$ for every edge $e$, and for $f>0$
+\[
+  z+f\,U\subseteq K_p
+  \iff
+  f\le f^\ast:=\min_e\frac{\sigma_e}{\mu_e}.
+\]
+In particular no font size fits if some $\sigma_e\le 0$, and otherwise $f^\ast$
+is the largest font size that fits.
+\end{theorem}
+\begin{proof}
+$0$ is an interior point of $\conv V$, because $\conv V$ contains a rectangle
+of positive width and height centred horizontally at $0$ and meeting both
+half-planes $\{y>0\}$ and $\{y<0\}$. So for each unit vector $n_e$ there is
+$y\in\conv V$ with $n_e\cdot y>0$, and a linear function on $\conv V$ attains
+its maximum on $V$; hence $\mu_e>0$. By Lemma~\ref{lem:rect} applied to each
+rectangle and the convex set $K_p$, $z+fU\subseteq K_p$ if and only if
+$n_e\cdot(z+fu)\le b_e-p$ for all $e$ and all $u\in V$, i.e.\ if and only if
+$f\,\mu_e\le\sigma_e$ for all $e$. Since $\mu_e>0$ this is $f\le\sigma_e/\mu_e$
+for all $e$.
+\end{proof}
+
+The program evaluates $f^\ast$ for every way of breaking the name into at most
+five lines at spaces, and with an image for both arrangements (image above,
+image below), which have different corner sets $V$ because text and image
+differ in width. It draws the candidate with the largest $f^\ast$, capped at
+$15$\,pt. If the best $f^\ast$ with an image is below $4.5$\,pt it repeats
+without the image; if the result is still below $4.5$\,pt the cell shows a key
+number (or nothing) and the name and value are printed in a key. By
+Theorem~\ref{thm:label} every drawn block lies in $K_p$ with $p=1.5$\,pt: it
+is inside its cell and at least $1.5$\,pt from every edge. $\sigma_e>0$ is
+possible only if $z$ is more than $p$ from every edge; $z\in\interior K$ by
+Proposition~\ref{prop:centroid}.
+
+On 2000 random cells with random blocks, the largest excess of any corner
+over any padded edge at $f=f^\ast$ was $3\times10^{-14}$\,pt, and at
+$1.001f^\ast$ some corner was outside in every case, so the bound is attained.
+
+\section{Assumptions}
+
+\begin{assumption}[Distinct initial sites]\label{asm:sites}
+The seeded pseudo-random initial sites at each node are pairwise distinct.
+Coincident sites would make $d_{ij}=0$; this has probability zero under the
+sampling and did not occur in any run, but it is not tested explicitly.
+\end{assumption}
+
+\begin{assumption}[Floating point]\label{asm:float}
+Computations are in IEEE double precision. Theorems~\ref{thm:power}
+and~\ref{thm:nest} are statements about exact arithmetic; computed polygons
+satisfy them up to rounding. The measured size of the rounding effects is in
+Section~\ref{sec:numerics} (overlaps and gaps below $10^{-15}$ of
+$\area(\Omega)$), twelve orders of magnitude below the area tolerance.
+\end{assumption}
+
+\begin{assumption}[Typography]\label{asm:type}
+Each line of text is drawn inside its line box: (i) the width of a line
+scales linearly with font size; (ii) the inked height of a line is at most
+$\kappa f$; (iii) the renderer centres the ink of each line on the block's
+vertical axis. For the font used, the largest inked height measured over test
+strings with accents and descenders is $1.163f<1.18f$, which supports (ii).
+(i) holds for unhinted outline fonts. (iii) holds up to the glyph side
+bearings, which are small against the padding but which I have not bounded;
+it has been checked by eye on the rendered charts only.
+\end{assumption}
+
+\section{Numerical verification}\label{sec:numerics}
+
+The three charts were laid out again and every polygon was checked with
+\emph{Shapely}, a geometry library that shares no code with the program. Areas
+are fractions of $\area(\Omega)$.
+
+\begin{center}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+ & Donors & Budget FY2025 & Debt holders \\
+\midrule
+Leaves & 50 & 53 & 189 \\
+Largest number of children of one node & 23 & 9 & 143 \\
+Largest value ratio among siblings & 22 & 290 & $4.4\times10^{6}$ \\
+Non-convex cells & 0 & 0 & 0 \\
+Largest part of a child outside its parent & $7\times10^{-18}$ & $3\times10^{-18}$ & $1\times10^{-18}$ \\
+Largest overlap of two siblings & $2\times10^{-17}$ & $5\times10^{-18}$ & $7\times10^{-18}$ \\
+Largest $\lvert\sum\text{children}-\text{parent}\rvert$ & $5\times10^{-16}$ & $8\times10^{-16}$ & $7\times10^{-16}$ \\
+Largest leaf error $\max_\ell\lvert\delta(\ell)\rvert$ & $2.8\times10^{-4}$ & $2.3\times10^{-4}$ & $2.4\times10^{-4}$ \\
+Largest internal-node error $\max_u\lvert\delta(u)\rvert$ & $1.5\times10^{-4}$ & $4.5\times10^{-5}$ & $2.4\times10^{-4}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The last two rows illustrate Theorem~\ref{thm:additive}: the error at
+internal nodes does not exceed the error at the leaves (they coincide in the third column because one node there has a single leaf). All leaf errors are
+below the certified bound $10^{-3}$, i.e.\ every cell's area is within
+$0.1\%$ of proportional.
+
+\begin{thebibliography}{9}
+\bibitem{AHA} F.~Aurenhammer, F.~Hoffmann, B.~Aronov,
+  \emph{Minkowski-type theorems and least-squares clustering},
+  Algorithmica 20 (1998). Cited from memory; not re-read for this note.
+\bibitem{KMT} J.~Kitagawa, Q.~M\'erigot, B.~Thibert,
+  \emph{Convergence of a Newton algorithm for semi-discrete optimal transport},
+  J.\ Eur.\ Math.\ Soc.\ 21 (2019). Cited from memory; not re-read for this
+  note.
+\end{thebibliography}
+
+\end{document}
