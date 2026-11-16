@@ -87,7 +87,8 @@ def diagram(P, S, w):
         dist = np.hypot(*(S - S[i]).T)
         for j in np.argsort(dist)[1:]:
             # Sites are taken nearest first. With every vertex within r of
-            # s_i, site j can only cut if (dist - r)^2 - w_j < r^2 - w_i.
+            # s_i, site j can only cut if (dist - r)^2 - w_j < r^2 - w_i
+            # (PROOF.pdf, lemma on skipped sites), so the rest are skipped.
             r = np.hypot(*(c - S[i]).T).max()
             if dist[j] >= r + np.sqrt(max(r * r - w[i] + w.max(), 0.0)):
                 break
@@ -139,7 +140,8 @@ def split(P, targets, rng):
     S = np.empty((0, 2))
     while len(S) < k:  # seeded random points inside P
         x = rng.uniform(lo, hi)
-        if (edges[:, 0] * (x - P)[:, 1] - edges[:, 1] * (x - P)[:, 0] >= 0).all():
+        inside = (edges[:, 0] * (x - P)[:, 1] - edges[:, 1] * (x - P)[:, 0] >= 0).all()
+        if inside and not (S == x).all(1).any():  # sites must be distinct
             S = np.vstack([S, x])
     w = np.zeros(k)
     for _ in range(LLOYD):  # move each site to its cell's centroid: rounder cells
@@ -205,8 +207,8 @@ def read(path):
         for name in path_:
             node.value += float(value)
             node = node.child(name.strip())
-        if node.value or float(value) <= 0:
-            sys.exit(f"duplicate or non-positive row: {path_}")
+        if node.value or not float(value) > 0 or not all(n.strip() for n in path_):
+            sys.exit(f"duplicate, unnamed or non-positive row: {path_}")
         node.value = float(value)
         if icons and row[-1].strip():
             node.icon = plt.imread(Path(path).parent / row[-1].strip())
@@ -312,7 +314,8 @@ def main(path):
     layout(root, rng)
     disc = area(root.poly)
     err = max(abs(area(l.poly) / (disc * l.value / root.value) - 1) for l in root.leaves())
-    assert err < LEAF_TOL, err
+    if not err < LEAF_TOL:  # the certificate: checked on the finished polygons, every run
+        sys.exit(f"layout rejected: a cell is {err:.1e} from its proportional area (limit {LEAF_TOL:.0e})")
 
     # Leaf labels: name + bold value at the largest size that fits; else a key number.
     key, n_key, tiers = [], 0, [0, 0, 0]

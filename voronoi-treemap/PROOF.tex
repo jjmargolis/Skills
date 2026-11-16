@@ -52,7 +52,9 @@ The output satisfies the area bound whenever the program returns & Thm.~\ref{thm
 The iteration always terminates & Rem.~\ref{rem:termination} & \emph{not proved}; cited \\
 Formula for the derivative of area in the weights & Prop.~\ref{prop:derivative} & one-sided proof; not relied on \\
 Label block lies inside its cell; largest font in closed form & Thm.~\ref{thm:label} & proved here \\
-Glyphs lie inside the label block & Asm.~\ref{asm:type} & assumed; measured \\
+The shortcut that skips distant sites changes no cell & Lem.~\ref{lem:prune} & proved here \\
+Leaf error bound without the final check (depth $\le 3$) & Prop.~\ref{prop:apriori} & proved here \\
+Rendered glyphs lie inside the cell & Sec.~\ref{sec:assumptions} & \emph{not proved}; measured \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -158,6 +160,30 @@ $x\in H_{ij}(w)$, a line, which has area zero and contains no open set.
 the areas by terms that are areas of subsets of pairwise intersections; these
 vanish by (c). The first statement follows with (b).
 \end{proof}
+
+\begin{lemma}[Skipped sites]\label{lem:prune}
+Let $Q\subseteq P$ be a convex polygon, $r=\max\{\norm{v-s_i}: v \text{ a vertex of } Q\}$
+and $\bar w=\max_m w_m$. If
+\[
+  \norm{s_j-s_i}\ \ge\ r+\sqrt{\max(r^2-w_i+\bar w,\,0)}
+\]
+then $Q\subseteq\{\pi_i\le\pi_j\}$.
+\end{lemma}
+\begin{proof}
+The convex function $x\mapsto\norm{x-s_i}$ attains its maximum over $Q$ at a
+vertex, so $\norm{x-s_i}\le r$ on $Q$. Then
+$\norm{x-s_j}\ge\norm{s_j-s_i}-r\ge 0$, and
+$\pi_j(x)\ge(\norm{s_j-s_i}-r)^2-\bar w\ge\max(r^2-w_i+\bar w,0)-\bar w\ge r^2-w_i\ge\pi_i(x)$.
+\end{proof}
+
+The program computes $C_i(w)$ by clipping $P$ against the half-planes
+$\{\pi_i\le\pi_j\}$ in order of increasing $\norm{s_j-s_i}$, and stops at the
+first $j$ satisfying the inequality of Lemma~\ref{lem:prune} for the current
+polygon $Q$. Every later $j$ satisfies it too (same $Q$, larger distance), so
+by the lemma the remaining half-planes all contain $Q$ and the result is
+exactly $C_i(w)$. On 400 random instances, including ones with empty cells,
+the areas agree with clipping against every site to $4\times10^{-15}$ of
+$\area(P)$.
 
 \section{The nested layout}
 
@@ -324,11 +350,11 @@ following. $A(w)=(\area(C_1(w)),\dots,\area(C_k(w)))$, computed by the
 shoelace formula on the clipped polygons.
 
 \begin{enumerate}[label=\arabic*.]
-\item \emph{Start.} Sites are $k$ seeded pseudo-random points of $P$; $w=0$.
+\item \emph{Start.} Sites are $k$ seeded pseudo-random points of $P$, a sampled point being rejected if it equals an earlier site; $w=0$.
 \item \emph{Solve} (to tolerance $\tau'$). If some $A_i(w)=0$, reset $w=0$.
       Let $\beta=\tfrac12\min(\min_i A_i(w),\min_i t_i)$. Repeat until
       $\max_i\lvert A_i(w)/t_i-1\rvert<\tau'$: compute a direction $d$ from
-      the linear system of Proposition~\ref{prop:derivative}; for
+      the linear system below Proposition~\ref{prop:derivative}; for
       $\theta=1,\tfrac12,\tfrac14,\dots$ accept $w\leftarrow w+\theta d$ at
       the first $\theta$ with
       \begin{equation}\label{eq:accept}
@@ -344,8 +370,8 @@ shoelace formula on the clipped polygons.
       cells.
 \end{enumerate}
 After the whole tree is laid out, the program computes $\delta(\ell)$ for
-every leaf from the returned polygons and aborts unless
-$\max_\ell\lvert\delta(\ell)\rvert<10^{-3}$.
+every leaf from the returned polygons and exits with an error unless
+$\max_\ell\lvert\delta(\ell)\rvert<10^{-3}$. This is an explicit test, not a language-level assertion, so it runs in every mode of the interpreter.
 
 \begin{proposition}\label{prop:voronoi}
 If the sites are distinct points of $P$ and $w=0$, every cell has positive
@@ -390,9 +416,10 @@ rounding (Assumption~\ref{asm:float}):
 \end{theorem}
 \begin{proof}
 (a) Whatever sites and weights the iteration ends with, the returned cells are
-power cells of distinct sites in a convex body, so
+power cells of distinct sites in a convex body (computed exactly, by
+Lemma~\ref{lem:prune}), so
 Theorems~\ref{thm:power} and~\ref{thm:nest} apply. Distinctness holds at the
-start by Assumption~\ref{asm:sites} and is preserved by
+start by the rejection rule in step~1 and is preserved by
 Proposition~\ref{prop:centroid}; every cell the program recurses into has
 positive area because its area is within a factor $1\pm\tau$ of a positive
 target.
@@ -403,6 +430,25 @@ internal nodes is Theorem~\ref{thm:additive}.
 because the solve starts from cells of positive area, by
 Proposition~\ref{prop:voronoi} after a reset.
 \end{proof}
+
+\begin{proposition}[Error bound from the solves alone]\label{prop:apriori}
+Suppose every solve returned, so that each child cell satisfies
+$\lvert\area(K(u_i))/t_i-1\rvert<\tau$ with
+$t_i=\area(K(u))\,v(u_i)/v(u)$. Then a node at depth $m$ has
+$\lvert\delta\rvert\le(1+\tau)^m-1$. For $\tau=3\times10^{-4}$ and $m\le3$ this
+is at most $9.01\times10^{-4}<10^{-3}$.
+\end{proposition}
+\begin{proof}
+Write $\area(K(u_i))=t_i(1+\epsilon_i)$ with $\lvert\epsilon_i\rvert<\tau$.
+Since $\area(K(u))=c\,v(u)(1+\delta(u))$, we get
+$1+\delta(u_i)=(1+\delta(u))(1+\epsilon_i)$. As $\delta(\rho)=0$, induction on
+depth gives $(1-\tau)^m\le1+\delta\le(1+\tau)^m$ at depth $m$, and
+$1-(1-\tau)^m\le(1+\tau)^m-1$.
+\end{proof}
+
+So for the trees the program accepts (depth at most $3$) the final test cannot
+fail in exact arithmetic; it is an independent check of the finished polygons,
+not the only source of the bound.
 
 The point of Theorem~\ref{thm:partial} is that the correctness of a drawn
 chart does not rest on any convergence theory: the area bound is a
@@ -443,7 +489,7 @@ $L(0)=\ell_{ij}$. Dividing by $h$ and letting $h\downarrow0$ gives the claim.
 \end{proof}
 
 The program assembles the matrix $M$ with $M_{ij}=-\ell_{ij}/(2d_{ij})$ for
-$i\ne j$ and $M_{ii}=-\sum_{j\ne i}M_{ij}$, and solves $Md=t-A$ with $d_1=0$.
+$i\ne j$ and $M_{ii}=-\sum_{j\ne i}M_{ij}$, and solves $Md=t-A$ with $d_1=0$ (by least squares, which is the solution whenever the reduced matrix is invertible).
 Proposition~\ref{prop:derivative} is not needed for any guarantee: a poor
 direction can only cause rejected steps or an abort, by~\eqref{eq:accept}.
 Against central finite differences on 20 random instances the entries of $M$
@@ -517,13 +563,7 @@ On 2000 random cells with random blocks, the largest excess of any corner
 over any padded edge at $f=f^\ast$ was $3\times10^{-14}$\,pt, and at
 $1.001f^\ast$ some corner was outside in every case, so the bound is attained.
 
-\section{Assumptions}
-
-\begin{assumption}[Distinct initial sites]\label{asm:sites}
-The seeded pseudo-random initial sites at each node are pairwise distinct.
-Coincident sites would make $d_{ij}=0$; this has probability zero under the
-sampling and did not occur in any run, but it is not tested explicitly.
-\end{assumption}
+\section{Assumptions and what is only measured}\label{sec:assumptions}
 
 \begin{assumption}[Floating point]\label{asm:float}
 Computations are in IEEE double precision. Theorems~\ref{thm:power}
@@ -533,16 +573,33 @@ Section~\ref{sec:numerics} (overlaps and gaps below $10^{-15}$ of
 $\area(\Omega)$), twelve orders of magnitude below the area tolerance.
 \end{assumption}
 
-\begin{assumption}[Typography]\label{asm:type}
-Each line of text is drawn inside its line box: (i) the width of a line
-scales linearly with font size; (ii) the inked height of a line is at most
-$\kappa f$; (iii) the renderer centres the ink of each line on the block's
-vertical axis. For the font used, the largest inked height measured over test
-strings with accents and descenders is $1.163f<1.18f$, which supports (ii).
-(i) holds for unhinted outline fonts. (iii) holds up to the glyph side
-bearings, which are small against the padding but which I have not bounded;
-it has been checked by eye on the rendered charts only.
-\end{assumption}
+\paragraph{Rendered text.} Theorem~\ref{thm:label} is about the block
+$z+fU$, a model of the text. Whether the ink of the glyphs stays inside the
+block depends on the font and the renderer and is not proved. Two facts
+support the model: the width of a line scales linearly with font size for an
+outline font, and the largest inked line height measured over test strings
+with accents and descenders is $1.163f<\kappa f$. The model is not exact,
+however. I rendered each chart and compared the renderer's ink box of every
+label line with its cell:
+
+\begin{center}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+ & Label lines & Ink outside cell & Least clearance \\
+\midrule
+Donors & 160 & 0 & 0.94\,pt \\
+Donors, with images & 155 & 0 & 1.00\,pt \\
+Budget FY2025 & 86 & 0 & 1.00\,pt \\
+Debt holders & 124 & 0 & 0.61\,pt \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The block is $1.5$\,pt clear of every edge by Theorem~\ref{thm:label}, so the
+ink overshoots the block by up to about $0.9$\,pt. The padding absorbs this:
+in every measured case all ink is inside the cell. That is a measurement on
+four renderings, not a theorem.
 
 \section{Numerical verification}\label{sec:numerics}
 
@@ -573,6 +630,30 @@ The last two rows illustrate Theorem~\ref{thm:additive}: the error at
 internal nodes does not exceed the error at the leaves (they coincide in the third column because one node there has a single leaf). All leaf errors are
 below the certified bound $10^{-3}$, i.e.\ every cell's area is within
 $0.1\%$ of proportional.
+
+\section{Correspondence between this note and the code}
+
+Each statement was checked against the function that implements it.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{4.3cm}p{3.4cm}p{6.6cm}@{}}
+\toprule
+Statement & Code & Result of the check \\
+\midrule
+Def.~\ref{def:power}, Lemma~\ref{lem:affine} & \texttt{diagram}, \texttt{clip} & half-plane $2(s_j-s_i)\cdot x\le\norm{s_j}^2-\norm{s_i}^2+w_i-w_j$: matches \\
+Lemma~\ref{lem:prune} & early exit in \texttt{diagram} & was missing from the first version of this note; now proved and tested \\
+Thm.~\ref{thm:nest}, Cor.~\ref{cor:exact} & \texttt{layout} & targets $\area(K(u))\,v(u_i)/v(u)$: matches \\
+Solve, test~\eqref{eq:accept} & \texttt{solve} & reset, floor $\beta$, acceptance rule and limits: match \\
+Relaxation, Prop.~\ref{prop:centroid} & \texttt{split}, \texttt{centroid} & 25 rounds at $0.1$, final solve at $3\times10^{-4}$: matches \\
+Distinct sites & \texttt{split} & was assumed; the code now rejects a repeated sample \\
+Final test, Thm.~\ref{thm:partial}(b) & \texttt{main} & was an \texttt{assert}, which the interpreter can disable; now an explicit test \\
+Prop.~\ref{prop:derivative} & matrix \texttt{H} in \texttt{diagram} & signs and edge bookkeeping match; agrees with finite differences \\
+Thm.~\ref{thm:label} & \texttt{block}, \texttt{fit} & corners, normals, padding and the minimum of ratios: match \\
+Label choice (Sec.~7) & \texttt{main} & five-line limit, image above/below, $4.5$ and $15$\,pt limits: match \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \begin{thebibliography}{9}
 \bibitem{AHA} F.~Aurenhammer, F.~Hoffmann, B.~Aronov,
