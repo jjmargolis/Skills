@@ -11,6 +11,7 @@ Claude skills, one folder each. The copy saved in the Claude account is the one 
 | [carovision](carovision/) | Typeset documents as a classic trade-book PDF (Times, Bodoni Bold) |
 | [one-pager](one-pager/) | One-page PDF, with a chart, explaining one concept or comparing two things |
 | [political-spectrum-heatmap](political-spectrum-heatmap/) | Sourced chart of where voter guides agree and disagree on a ballot |
+| [reading-packet](reading-packet/) | One PDF of excerpts from many sources, each sized to a time budget, with divider pages, source-page stamps and bookmarks |
 | [voronoi-treemap](voronoi-treemap/) | Circular Voronoi treemap of a 2- or 3-level dataset: a disc of cells sized by value, grouped by colour and rim arcs |
 
 The OMG BPMN 2.0.2 spec that `bpmn/spec.md` was distilled from is in [bpmn-skills/source/](bpmn-skills/source/). It is a source, not part of any skill.
