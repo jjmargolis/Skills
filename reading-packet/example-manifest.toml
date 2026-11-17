@@ -1,0 +1,187 @@
+title = "From design to maintenance labour"
+subtitle = "Costmap reading packet: the Logistics Support Analysis Record and the works around it"
+date = "17 November 2026"
+source_dir = "src"
+output = "costmap-reading-packet.pdf"
+image_dpi = 150
+intro = "Excerpts chosen so that no reading takes more than about an hour. Short sources are complete; long ones keep the chapters that bear on the chain from a designed item to tasks, skill-hours, staff and cost, and the charts that carry the argument. Each reading opens with a page saying what was taken and why. Every page is stamped with its page number in the source, so the full document can be opened at the same place. The reading list in docs/research/reading-list.md gives the full citations and how each link was checked. Two entries on the list are not here: the COBie data tables (the publisher's site was down) and Kennedy and O'Hagan on model calibration (paywalled)."
+
+[pace]
+standard = 25
+guide = 40
+report = 40
+math = 12
+paper = 15
+graphics = 100
+web = 30
+
+[[reading]]
+section = "Orientation"
+title = "Defense precedents for the design-to-task-to-labour chain, and the model structure they imply"
+source = "Costmap literature review, 2026: sections 'Defense, aerospace and energy precedents' and 'Model structure implied by the literature'"
+file = "lit-review.pdf"
+pages = "13-17,37-39"
+kind = "guide"
+why = "The map for everything after it: what the LSAR, RCM, O&S costing and offshore wind each contribute to the chain, and the graph structure the review draws from them."
+
+[[reading]]
+section = "Stage 1. The Logistics Support Analysis Record"
+title = "MIL-HDBK-1388, Logistic Support Analysis (draft)"
+source = "US Army Materiel Command, Logistics Support Activity, draft of 1 March 1994, never approved"
+file = "mil-hdbk-1388.pdf"
+pages = "3,5-6,9-12,23-24,34-35,49-57,79-81"
+kind = "standard"
+why = "The plain-language explanation of the LSA process and the LSAR: what each family of data tables holds (A operating requirement, B reliability and FMECA, C tasks and personnel, G skills), Task 401 task analysis, and the reports built from them, including LSA-001, annual man-hours by skill specialty and maintenance level, the defense version of an hours-to-headcount output."
+note = "The figures in this copy did not survive scanning, and their pages are left out. The figures in Reading 3 cover the same ground."
+link = "https://www.nasa.gov/wp-content/uploads/2023/06/mil-hdbk-1388-handbook.pdf"
+
+[[reading]]
+title = "MIL-STD-1388-2B, DoD Requirements for a Logistic Support Analysis Record"
+source = "US Department of Defense, 28 March 1991 (cancelled; still the reference for the LSAR schema)"
+file = "mil-std-1388-2b.pdf"
+pages = "11-16,23-26,31-32,36-37,42-43,50-51,60,63-67,96-97"
+kind = "standard"
+why = "The schema itself. Opens with four diagrams worth studying slowly: the LSA documentation process, LSAR data flow, and the RAM parameter relationships that derive task frequency and mean man-hours from failure rate and annual operating requirement. Then the table-family descriptions with their relationship diagrams for X (breakdown), A, B, C (task requirement, subtask, personnel) and G (skills), and the table that joins failure modes to tasks."
+link = "https://everyspec.com/MIL-STD/MIL-STD-1300-1399/MIL-STD-1388-2B_21788/"
+
+[[reading]]
+title = "S3000L Issue 3.0, Chapter 12: Task requirements and maintenance task analysis"
+source = "ASD (Europe) and AIA (US), 30 April 2025"
+file = "s3000l-3.0.pdf"
+pages = "267-287,328,333,426-427"
+kind = "standard"
+why = "The current successor to the LSAR. Chapter 12 separates why a task exists (task requirement), what the task is (task, subtask) and how often it happens on an item in a context (task usage, task frequency), and assigns personnel, material and equipment resources at subtask level. Added: two figures from Chapter 14 on how LCC and LSA interact, and the overview of the data model's units of functionality from Chapter 19."
+link = "https://www.s-series.org/s3000l/downloads/"
+
+[[reading]]
+section = "Stage 2. Where the tasks come from"
+title = "Nowlan and Heap, Reliability-Centered Maintenance"
+source = "F. Stanley Nowlan and Howard F. Heap, United Airlines for the US Department of Defense, December 1978 (DTIC AD-A066579)"
+file = "nowlan-heap-1978.pdf"
+pages = "24-36,67-71,108-121"
+kind = "report"
+why = "The founding text of RCM. Chapter 1 sets out the philosophy; section 2-8 holds the six age-reliability curves; sections 4-2 and 4-3 give the decision process and the decision diagram that decides whether a task is applicable and effective, or whether an item should run to failure."
+note = "The curve percentages come from airline components and should not be carried over to station assets."
+link = "https://everyspec.com/DoD/DOD-General/AD-A066579_18228/"
+
+[[reading]]
+title = "NASA, Reliability-Centered Maintenance Guide for Facilities and Collateral Equipment"
+source = "NASA, final edition September 2008"
+file = "nasa-rcm-guide-2008.pdf"
+pages = "19-46,137-142"
+kind = "guide"
+why = "RCM applied by a public owner to buildings and plant. Chapter 3 has the NASA RCM logic tree and the life-cycle cost commitment curve; Chapter 4 the P-F curve, the six failure patterns and an FMEA worksheet; Chapter 8 what to require of a facility while it is being acquired, the closest analogue to a design review for maintainability."
+link = "https://www.nasa.gov/wp-content/uploads/2023/06/nasa-rcmguide.pdf"
+
+[[reading]]
+section = "Stage 3. How defense turns tasks into cost"
+title = "MIL-HDBK-502A, Product Support Analysis"
+source = "US Department of Defense, 8 March 2013"
+file = "mil-hdbk-502a.pdf"
+pages = "12-33"
+kind = "standard"
+why = "How the US frames LSA now that the 1388 standards are cancelled: supportability objectives, evaluation of alternatives and the determination of support resources (manpower, skills, spares, facilities) at each acquisition phase."
+link = "https://everyspec.com/MIL-HDBK/MIL-HDBK-0500-0599/MIL-HDBK-502A_46930/"
+
+[[reading]]
+title = "Operating and Support Cost-Estimating Guide"
+source = "Office of the Secretary of Defense, Cost Assessment and Program Evaluation, March 2014"
+file = "cape-os-guide-2014.pdf"
+pages = "9-14,18-19,25-30,47-52,59-70"
+kind = "guide"
+why = "The life-cycle cost categories, worked trade-off studies including unit maintenance manpower as a function of reliability and maintainability, the O&S estimating process, and the OSD cost element structure that every estimate rolls up into."
+link = "https://everyspec.com/DoD/DoD-PUBLICATIONS/OS_CE_GUIDE_V9_MAR2014_51821/"
+
+[[reading]]
+title = "DoD Cost Estimating Guide, version 3"
+source = "Office of the Secretary of Defense, Cost Assessment and Program Evaluation, version 3.0, September 2025"
+file = "dow-cost-guide-2025.pdf"
+pages = "57-77,126-128"
+kind = "guide"
+why = "The current general guide. Chapter 6 compares the estimating methods (analogy, parametric, engineering build-up, extrapolation from actuals) and Chapter 7 the anatomy of a cost model; Appendix I covers estimating for military construction and facilities. Costmap is an engineering build-up; this shows how reviewers will judge one."
+note = "Added to the reading list with this packet."
+link = "https://www.cape.osd.mil/files/otherGuides/DoW_Cost_Estimating_Guide_v3_202509.pdf"
+
+[[reading]]
+section = "Stage 4. Lifecycle cost basics"
+title = "NIST Handbook 135, Life Cycle Cost Manual for the Federal Energy Management Program"
+source = "Joshua Kneifel and David Webb, National Institute of Standards and Technology, 2020"
+file = "nist-hb-135-2020.pdf"
+pages = "33-41,74-88,242-249"
+kind = "guide"
+why = "Chapter 1 frames life-cycle cost analysis; Chapter 4 says how each cost category is estimated, with operation, maintenance and repair treated as an input; Chapter 14 covers deferred maintenance in the federal government, which is what an under-funded O&M plan becomes."
+link = "https://nvlpubs.nist.gov/nistpubs/hb/2020/NIST.HB.135-2020.pdf"
+
+[[reading]]
+title = "Design determines 70% of cost? A review of implications for design evaluation"
+source = "J.A. Barton, D.M. Love and G.D. Taylor, Journal of Engineering Design 12(1):47-58, 2001"
+file = "barton-2001.pdf"
+pages = "all"
+kind = "paper"
+why = "Where the '70-80% of lifecycle cost is fixed at design' claim came from, and why the defensible version is narrower. Read before using any form of it."
+link = "https://doi.org/10.1080/09544820010031553"
+
+[[reading]]
+section = "Stage 5. The transit setting"
+title = "FTA Report 0098, Transit Asset Management Guide"
+source = "Federal Transit Administration, 2012, updated 2016"
+file = "fta-0098.pdf"
+pages = "23-43,194-209"
+kind = "guide"
+why = "Section 2 introduces transit asset management as agencies practise it; the supplement's Chapter 3 covers facilities and stations: inventory, condition, lifecycle management and the decisions agencies make about them."
+link = "https://www.transit.dot.gov/sites/fta.dot.gov/files/docs/research-innovation/57411/ftareportno0098.pdf"
+
+[[reading]]
+title = "TERM Federal Technical Overview"
+source = "Federal Transit Administration, January 2025"
+file = "fta-term-2025.pdf"
+pages = "all"
+kind = "guide"
+why = "How the federal reinvestment model represents condition, decay curves and replacement timing, and why it leaves agency O&M out of its benefit-cost tests."
+link = "https://www.transit.dot.gov/sites/fta.dot.gov/files/2025-01/TERM-Federal-Technical-Overview_0.pdf"
+
+[[reading]]
+title = "Bus Stop Master Plan"
+source = "Utah Transit Authority, 2023"
+file = "uta-bsmp-2023.pdf"
+pages = "all"
+kind = "graphics"
+why = "The most usable published station-level O&M structure: task minutes times frequency times a loaded labour rate, by stop level. Its published annual totals count a one-time removal cost every year; the literature review gives the correction."
+link = "https://buyapass.rideuta.com/-/media/Files/About-UTA/Reports/2023_BSMP_Compressed_a.pdf"
+
+[[reading]]
+title = "The BRT Planning Guide, section 21.4: Infrastructure costing"
+source = "Institute for Transportation and Development Policy, online edition, printed 17 November 2026"
+file = "itdp-21-4.pdf"
+pages = "all"
+kind = "web"
+why = "The only explicit BRT station maintenance figure found, about 1.33% of construction cost a year without cleaning or security, and a picture of how coarse current practice is."
+link = "https://brtguide.itdp.org/branch/master/guide/infrastructure-management-and-costing/infrastructure-costing"
+
+[[reading]]
+title = "TCRP Report 184, Maintenance Technician Staffing Levels for Modern Public Transit Fleets"
+source = "Transit Cooperative Research Program, Transportation Research Board, 2016"
+file = "tcrp-184.pdf"
+pages = "all"
+kind = "guide"
+why = "The transit industry's existing conversion of maintenance hours into technician headcount, net of leave, breaks and shifts. It covers vehicles only; stations need the same arithmetic."
+link = "https://nap.nationalacademies.org/catalog/21925"
+
+[[reading]]
+section = "Stage 7. Calibrating against real ledgers"
+title = "Bayesian Data Analysis, Chapter 5: Hierarchical models (sections 5.1-5.2 and 5.5)"
+source = "Andrew Gelman, John Carlin, Hal Stern, David Dunson, Aki Vehtari and Donald Rubin, 3rd edition, 2013"
+file = "bda3.pdf"
+pages = "111-116,129-134"
+kind = "math"
+why = "Partial pooling: estimating a factor for a group with few observations by borrowing strength from the others. Section 5.5, eight schools, is the canonical worked example; read it as eight agencies."
+link = "http://www.stat.columbia.edu/~gelman/book/BDA3.pdf"
+
+[[reading]]
+title = "Experience rating and credibility"
+source = "Hans Bühlmann, ASTIN Bulletin 4(3):199-207, 1967"
+file = "buhlmann-1967.pdf"
+pages = "all"
+kind = "paper"
+why = "Partial pooling in the form actuaries have used for sixty years: a credibility weight between an agency's own history and the pooled mean, set by a ratio of variances. Easier to explain to a client than a posterior."
+link = "https://doi.org/10.1017/S0515036100008989"
