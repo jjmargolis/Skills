@@ -14,7 +14,7 @@ Claude skills, one folder each. The copy saved in the Claude account is the one 
 | [reading-packet](reading-packet/) | One PDF of excerpts from many sources, each sized to a time budget, with divider pages, source-page stamps and bookmarks |
 | [voronoi-treemap](voronoi-treemap/) | Circular Voronoi treemap of a 2- or 3-level dataset: a disc of cells sized by value, grouped by colour and rim arcs |
 
-The OMG BPMN 2.0.2 spec that `bpmn/spec.md` was distilled from is in [bpmn-skills/source/](bpmn-skills/source/). It is a source, not part of any skill.
+`bpmn/spec.md` is distilled from the OMG BPMN 2.0.2 specification, available from [omg.org/spec/BPMN/2.0.2](https://www.omg.org/spec/BPMN/2.0.2/).
 
 Charts made with voronoi-treemap are in [charts/](charts/): 2026 midterm donors, FY2025 federal outlays and holders of the federal debt. Each folder holds the data CSV, the PNG, SVG and PDF, and `proof.md`, which reconciles the data to its published total and records the measured area error. [charts/poster](charts/poster/) sets the federal outlays and debt charts on one A2 sheet as a print-ready vector PDF, with every source cited and linked; `poster.py` rebuilds it.
 
@@ -22,4 +22,4 @@ Packaged copies of carovision and one-pager, ready to upload to the Claude accou
 
 ## License
 
-Licensed under [CC BY 4.0](LICENSE): use, adapt and share anything here, including commercially, with credit to Jacob Margolis and a link to this repo. The OMG BPMN 2.0.2 specification in [bpmn-skills/source/](bpmn-skills/source/) is the Object Management Group's and stays under its own terms.
+Licensed under [CC BY 4.0](LICENSE): use, adapt and share anything here, including commercially, with credit to Jacob Margolis and a link to this repo.
