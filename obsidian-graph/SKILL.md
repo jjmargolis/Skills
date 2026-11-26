@@ -26,11 +26,13 @@ The page is a snapshot of an Obsidian vault: a force-directed graph of every not
 | `[text](relative/path.md)` in the body; a link to a folder resolves to its `README.md` or `index.md` | body | solid |
 | `[[note]]` inside a frontmatter property value | the property's name | dashed, named in the reader |
 
-Resolution follows Obsidian: exact path first, then file name, preferring the same folder, then the shortest path. Unresolved links are listed at the foot of the note. Links to images and other files render as plain text, since the page cannot load them. A note's title is its `title` property, else its first `# heading`, else its file name (a `README` takes its folder's name).
+Resolution follows Obsidian: exact path first, then file name, preferring the same folder, then the shortest path. Unresolved links are listed at the foot of the note.
+
+Each note shows its last-updated date: an `updated` (or `modified`, `last_updated`) property if set, else the file's last git commit, else its modification time. Node size follows backlinks, the distinct notes that link to it, so a note many others cite is large and a note that only cites others stays small. Links to images and other files render as plain text, since the page cannot load them. A note's title is its `title` property, else its first `# heading`, else its file name (a `README` takes its folder's name).
 
 ## Style
 
-Text panels follow carovision: Times body (Tinos as the web fallback), Libre Bodoni Bold titles, small-caps labels, hairline rules, black on white, inverted in dark mode. The graph is ink only: node size by degree, the selected note ringed with its neighbours in full ink and the rest faded, labels shown when zoomed in.
+Text panels follow carovision: Times body (Tinos as the web fallback), Libre Bodoni Bold titles, small-caps labels, hairline rules, black on white, inverted in dark mode. The graph is ink only: node size by backlinks, the selected note ringed with its neighbours in full ink and the rest faded, labels shown when zoomed in.
 
 ## Rules
 

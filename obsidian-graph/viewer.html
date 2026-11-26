@@ -110,7 +110,8 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 // Adjacency, degree and lowercased search text, once.
 const out = N.map(() => []), inc = N.map(() => []);
 V.links.forEach(([s, t, k]) => { out[s].push([t, k]); inc[t].push([s, k]); });
-const nodes = N.map((n, i) => ({ id: i, deg: out[i].length + inc[i].length }));
+// Node size follows backlinks: a note many others cite is central; one that cites many is not.
+const nodes = N.map((n, i) => ({ id: i, deg: new Set(inc[i].map(x => x[0])).size }));
 const hay = N.map(n => (n.t + ' ' + n.p + ' ' + n.b).toLowerCase());
 const topFolder = f => f.split('/').slice(0, 2).join('/');
 
@@ -152,7 +153,7 @@ const readColors = () => { const c = getComputedStyle(document.body); ink = c.co
 readColors();
 let sel = null, near = new Set();
 const fade = (c, a) => { const m = c.match(/\d+(\.\d+)?/g); return m ? `rgba(${m[0]},${m[1]},${m[2]},${a})` : c; };
-const radius = n => 2.2 + Math.sqrt(n.deg) * 1.15;
+const radius = n => 2.2 + Math.sqrt(n.deg) * 1.6;
 
 const G = ForceGraph()(el)
   .backgroundColor('rgba(0,0,0,0)')
@@ -241,6 +242,8 @@ let qt;
 $('#q').addEventListener('input', e => { clearTimeout(qt); qt = setTimeout(() => { S.q = e.target.value.trim().toLowerCase(); apply(); }, 180); });
 
 // Note reader.
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const fmtDate = d => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || ''); return m ? `${+m[3]} ${MONTHS[m[2] - 1]} ${m[1]}` : (d || 'unknown'); };
 const hist = [];
 const note = $('#note');
 const wide = matchMedia('(min-width: 900px)');
@@ -269,6 +272,7 @@ function open(i, push) {
       <button class="btn sc" id="close">Reset</button>
     </div>
     <div class="inner">
+      <div class="meta"><i>Updated ${esc(fmtDate(n.d))}</i></div>
       <div class="meta sc">${esc(n.f || 'vault root')}${n.y ? ' \u00b7 ' + esc(n.y) : ''}</div>
       <h2 class="title">${esc(n.t)}</h2>
       ${props.length ? `<table class="props">${props.map(([k, v]) => `<tr><th class="sc">${esc(k)}</th><td>${propVal(v)}</td></tr>`).join('')}</table>` : ''}

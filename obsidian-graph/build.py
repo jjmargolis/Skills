@@ -8,7 +8,7 @@ Notes are the vault's .md files. Edges come from [[wikilinks]] and relative
 markdown links in the body (kind "body") and from [[wikilinks]] inside
 frontmatter properties (kind = the property name). Requires PyYAML.
 """
-import argparse, fnmatch, json, os, posixpath, re, sys
+import argparse, fnmatch, json, os, posixpath, re, subprocess, sys
 from datetime import date, datetime
 from urllib.parse import unquote
 
@@ -138,10 +138,39 @@ def prop_links(props, i, res, edges):
         walk(v, k)
 
 
+UPDATED_KEYS = ("updated", "modified", "last_updated", "last-updated", "date_modified")
+
+
+def git_dates(vault):
+    """Last commit date (YYYY-MM-DD) of every file under the vault, or {} outside git."""
+    try:
+        log = subprocess.run(["git", "-C", vault, "log", "--format=%x00%cs", "--name-only", "--relative", "--", "."],
+                             capture_output=True, text=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return {}
+    dates = {}
+    for block in log.split("\0")[1:]:
+        day, *files = block.strip().split("\n")
+        for f in files:
+            if f:
+                dates.setdefault(f.strip('"'), day)  # log runs newest first
+    return dates
+
+
+def updated(props, path, vault, dates):
+    """Last-updated date: a frontmatter property, else the last commit, else the file's mtime."""
+    for k in UPDATED_KEYS:
+        if props.get(k):
+            return str(props[k])[:10]
+    if path in dates:
+        return dates[path]
+    return date.fromtimestamp(os.path.getmtime(os.path.join(vault, path))).isoformat()
+
+
 def build(vault, excludes):
     paths = list(scan(vault, excludes))
     res = Resolver(paths)
-    notes, edges = [], set()
+    notes, edges, dates = [], set(), git_dates(vault)
     for i, p in enumerate(paths):
         with open(os.path.join(vault, p), encoding="utf-8", errors="replace") as fh:
             text = fh.read()
@@ -164,7 +193,8 @@ def build(vault, excludes):
         if name.lower() in ("readme", "index") and not props.get("title") and not h1:
             title = posixpath.basename(posixpath.dirname(p)) or name
         notes.append({"p": p, "t": title, "f": posixpath.dirname(p), "y": str(props.get("type", "")),
-                      "m": props, "b": body, "u": sorted(missing)})
+                      "m": props, "b": body, "u": sorted(missing),
+                      "d": updated(props, p, vault, dates)})
     links = [[s, t, k] for s, t, k in sorted(edges)]
     return {"notes": notes, "links": links}
 
