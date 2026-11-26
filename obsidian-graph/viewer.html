@@ -46,6 +46,9 @@ main{position:relative;display:flex;overflow:hidden}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:.5px solid var(--rule);background:var(--bg);padding:3px 9px;min-height:32px;cursor:pointer;font-size:15px}
 .chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip .gl{vertical-align:-2px;margin-right:5px}
+.lab{width:3.6em;color:var(--mute);font-size:15px}
+#filters .hint{margin:10px 0 6px;color:var(--mute);font-style:italic;font-size:15px}
 .chip small{color:var(--mute);margin-left:4px}
 .chip[aria-pressed=true] small{color:inherit;opacity:.7}
 .row{display:flex;gap:8px;align-items:center;margin:6px 0}
@@ -134,21 +137,68 @@ const hay = N.map(n => (n.t + ' ' + n.p + ' ' + n.b).toLowerCase());
 const topFolder = f => f.split('/').slice(0, 2).join('/');
 
 // Filter state.
-const S = { q: '', folders: new Set(), types: new Set(), key: '', val: '', hidden: new Set(V.hide || []), orphans: true, local: null, labels: false };
-const folders = {}, types = {}, keys = {};
+const S = { q: '', folders: new Set(), key: '', val: '', hidden: new Set(V.hide || []), orphans: true, local: null, labels: false,
+  shapeBy: 'type', fillBy: '', sizeBy: 'in', hideVals: new Set(), outlined: new Set() };
+const folders = {}, keys = {};
 N.forEach(n => {
   const f = n.f.split('/');
   for (let d = 1; d <= Math.min(2, f.length); d++) { const k = f.slice(0, d).join('/'); if (k) folders[k] = (folders[k] || 0) + 1; }
-  if (n.y) types[n.y] = (types[n.y] || 0) + 1;
   Object.keys(n.m).forEach(k => { if (k !== 'type' && k !== 'title') keys[k] = (keys[k] || 0) + 1; });
 });
 const flat = v => v == null ? [] : Array.isArray(v) ? v.flatMap(flat) : typeof v === 'object' ? Object.values(v).flatMap(flat) : [String(v)];
 const clean = s => s.replace(/\[\[([^\]|]*)(\|[^\]]*)?\]\]/g, '$1');
 
+// Glyphs: each shape is a list of [paint, path] parts in a [-1, 1] box ("f" filled silhouette,
+// "s" stroked line), drawn filled (settled) or open (outlined). Notes without a value are a grey dot.
+const SHAPES = V.shapes;
+const PATHS = Object.fromEntries(Object.entries(SHAPES).map(([k, parts]) => [k, parts.map(([pt, d]) => [pt, new Path2D(d)])]));
+// Values without a fixed glyph take the simplest unused shapes first, filled, then outlined.
+const ORDER = ['circle', 'square', 'diamond', 'triangle', 'hexagon', 'plus', 'hub', 'book', 'portico', 'flag', 'question'];
+const AUTO = [...ORDER.filter(sh => sh in SHAPES), ...Object.keys(SHAPES).filter(sh => !ORDER.includes(sh))];
+const NONE = ['circle', 'dot'];
+const valOf = (i, p) => p === 'type' ? N[i].y : clean(flat(N[i].m[p])[0] ?? '');
+const countVals = p => { const c = {}; N.forEach((_, i) => { const v = valOf(i, p); c[v] = (c[v] || 0) + 1; }); return c; };
+// A property can drive glyphs when it has 2 to 12 distinct values.
+const glyphProps = ['type', ...Object.keys(keys).sort()].filter(p => { const n = Object.keys(countVals(p)).filter(Boolean).length; return n >= 2 && n <= 12; });
+const OPEN_WORDS = /^(open|draft|proposed|todo|to do|pending|wip|in progress|unread|partial)$/i;
+let legend = {};
+function restyle() {
+  const c = countVals(S.shapeBy), vals = Object.keys(c).filter(Boolean).sort((a, b) => c[b] - c[a] || a.localeCompare(b));
+  const fixed = S.shapeBy === 'type' ? (V.glyphs || {}) : {};
+  const used = new Set(vals.filter(v => fixed[v]).map(v => fixed[v][0]));
+  const free = ['fill', 'open'].flatMap(st => AUTO.filter(sh => !used.has(sh)).map(sh => [sh, st]));
+  legend = {};
+  vals.forEach(v => legend[v] = fixed[v] || free.shift() || NONE);
+  nodes.forEach((n, i) => {
+    const v = valOf(i, S.shapeBy); let g = v ? legend[v] : NONE;
+    if (S.fillBy && g !== NONE) g = [g[0], S.outlined.has(valOf(i, S.fillBy)) ? 'open' : 'fill'];
+    n.g = g;
+  });
+}
+const glyphSvg = ([sh, st]) => st === 'dot'
+  ? '<svg class="gl" viewBox="-1.5 -1.5 3 3" width="14" height="14" aria-hidden="true"><circle r=".6" fill="currentColor" opacity=".5"/></svg>'
+  : `<svg class="gl" viewBox="-1.5 -1.5 3 3" width="14" height="14" aria-hidden="true">${SHAPES[sh].map(([pt, d]) => pt === 's'
+    ? `<path d="${d}" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="${st === 'fill' ? .36 : .18}"/>`
+    : st === 'fill' ? `<path d="${d}" fill="currentColor"/>` : `<path d="${d}" fill="none" stroke="currentColor" stroke-width=".2" stroke-linejoin="round"/>`).join('')}</svg>`;
+function drawGlyph(ctx, n, r, k, on) {
+  const [sh, st] = n.g || NONE, c = on ? ink : fade(ink, .14);
+  ctx.save(); ctx.translate(n.x, n.y);
+  if (st === 'dot') { ctx.scale(r * .6, r * .6); ctx.fillStyle = fade(ink, on ? .45 : .1); ctx.fill(PATHS.circle[0][1]); ctx.restore(); return; }
+  ctx.scale(r, r);
+  const hair = Math.min(.3, 1.2 / (k * r));
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = c;
+  for (const [pt, p] of PATHS[sh]) {
+    if (pt === 's') { ctx.lineWidth = st === 'fill' ? .36 : Math.max(hair, .16); ctx.stroke(p); }
+    else if (st === 'fill') { ctx.fillStyle = c; ctx.fill(p); }
+    else { ctx.fillStyle = bg; ctx.fill(p); ctx.lineWidth = hair; ctx.stroke(p); }
+  }
+  ctx.restore();
+}
+
 function passes(i) {
   const n = N[i];
   if (S.folders.size && ![...S.folders].some(f => n.f === f || n.f.startsWith(f + '/'))) return false;
-  if (S.types.size && !S.types.has(n.y)) return false;
+  if (S.hideVals.size && S.hideVals.has(valOf(i, S.shapeBy))) return false;
   if (S.key) { if (!(S.key in n.m)) return false; if (S.val && !flat(n.m[S.key]).map(clean).includes(S.val)) return false; }
   if (S.q) { const h = hay[i]; if (!S.q.split(/\s+/).every(w => h.includes(w))) return false; }
   return true;
@@ -186,8 +236,7 @@ const G = ForceGraph()(el)
   .d3AlphaDecay(.03)
   .nodeCanvasObject((n, ctx, k) => {
     const r = radius(n) / Math.max(1, k / 1.5) ** .6, on = sel === null || near.has(n.id);
-    ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
-    ctx.fillStyle = on ? ink : fade(ink, .14); ctx.fill();
+    drawGlyph(ctx, n, r, k, on);
     if (n.id === sel) { ctx.lineWidth = 1.5 / k; ctx.strokeStyle = ink; ctx.beginPath(); ctx.arc(n.x, n.y, r + 3 / k, 0, 2 * Math.PI); ctx.stroke(); }
     const show = S.labels || (sel !== null && near.has(n.id)) || (sel === null && r * k > 7) || k > 3.2;
     if (!show) return;
@@ -214,10 +263,10 @@ function apply(refit = true) {
   let keep = N.map((_, i) => passes(i));
   if (S.local !== null) { const L = localSet(S.local, 2); keep = keep.map((v, i) => v && L.has(i) || i === S.local); }
   const links = V.links.filter(([s, t, k]) => keep[s] && keep[t] && !S.hidden.has(k)).map(([s, t, k]) => ({ source: s, target: t, k }));
-  // Size by backlinks among the links on screen: distinct notes that point here.
+  // Size by backlinks among the links on screen (distinct notes that point here), by all neighbours, or equal.
   const cites = nodes.map(() => new Set());
-  links.forEach(l => cites[l.target].add(l.source));
-  nodes.forEach((n, i) => n.deg = cites[i].size);
+  links.forEach(l => { cites[l.target].add(l.source); if (S.sizeBy === 'all') cites[l.source].add(l.target); });
+  nodes.forEach((n, i) => n.deg = S.sizeBy === 'eq' ? 2 : cites[i].size);
   if (!S.orphans) { const linked = new Set(links.flatMap(l => [l.source, l.target])); keep = keep.map((v, i) => v && (linked.has(i) || i === sel)); }
   const shown = nodes.filter((_, i) => keep[i]);
   tree.querySelectorAll('.file').forEach(b => b.classList.toggle('out', !keep[+b.dataset.i]));
@@ -230,12 +279,20 @@ function apply(refit = true) {
 const chip = (group, v, n, on) => `<button class="chip" data-g="${group}" data-v="${esc(v)}" aria-pressed="${on}">${esc(v)}<small>${n}</small></button>`;
 function renderFilters() {
   const fk = Object.keys(folders).sort();
-  const tk = Object.keys(types).sort();
   const kk = Object.keys(keys).sort();
   const vals = S.key ? [...new Set(N.flatMap(n => S.key in n.m ? flat(n.m[S.key]).map(clean) : []))].sort() : [];
+  const opt = (v, label, cur) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(label)}</option>`;
+  const sc = countVals(S.shapeBy), sv = Object.keys(sc).sort((a, b) => !a - !b || sc[b] - sc[a]);
+  const fc = S.fillBy ? countVals(S.fillBy) : {}, fv = Object.keys(fc).filter(Boolean).sort((a, b) => fc[b] - fc[a]);
   $('#filters').innerHTML = `
+    <h3 class="sc">Glyphs</h3>
+    <div class="row"><label class="sc lab" for="gs">Shape</label><select id="gs">${glyphProps.map(p => opt(p, p, S.shapeBy)).join('')}</select></div>
+    <div class="row"><label class="sc lab" for="gf">Fill</label><select id="gf">${opt('', 'by shape', S.fillBy)}${glyphProps.filter(p => p !== S.shapeBy).map(p => opt(p, p, S.fillBy)).join('')}</select></div>
+    <div class="row"><label class="sc lab" for="gz">Size</label><select id="gz">${opt('in', 'backlinks', S.sizeBy)}${opt('all', 'all links', S.sizeBy)}${opt('eq', 'equal', S.sizeBy)}</select></div>
+    <div class="chips">${sv.map(v => `<button class="chip" data-h="${esc(v)}" aria-pressed="${!S.hideVals.has(v)}">${glyphSvg(v ? legend[v] : NONE)}${esc(v || 'none')}<small>${sc[v]}</small></button>`).join('')}
+      <button class="chip" data-all="1">Show all</button><button class="chip" data-all="0">Hide all</button></div>
+    ${S.fillBy ? `<p class="hint">Filled or outlined, by ${esc(S.fillBy)}:</p><div class="chips">${fv.map(v => `<button class="chip" data-o="${esc(v)}" aria-pressed="${!S.outlined.has(v)}">${glyphSvg(['circle', S.outlined.has(v) ? 'open' : 'fill'])}${esc(v)}<small>${fc[v]}</small></button>`).join('')}</div>` : ''}
     ${fk.length ? `<h3 class="sc">Folder</h3><div class="chips">${fk.map(f => chip('folders', f, folders[f], S.folders.has(f))).join('')}</div>` : ''}
-    ${tk.length ? `<h3 class="sc">Type</h3><div class="chips">${tk.map(t => chip('types', t, types[t], S.types.has(t))).join('')}</div>` : ''}
     ${kk.length ? `<h3 class="sc">Property</h3>
       <div class="row"><select id="pk" aria-label="Property"><option value="">Any property</option>${kk.map(k => `<option ${k === S.key ? 'selected' : ''} value="${esc(k)}">${esc(k)} (${keys[k]})</option>`).join('')}</select></div>
       ${S.key ? `<div class="row"><select id="pv" aria-label="Value"><option value="">Any value</option>${vals.slice(0, 500).map(v => `<option ${v === S.val ? 'selected' : ''} value="${esc(v)}">${esc(v.length > 60 ? v.slice(0, 58) + '…' : v)}</option>`).join('')}</select></div>` : ''}` : ''}
@@ -250,7 +307,10 @@ function renderFilters() {
 $('#filters').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.id === 'fclose') return toggleFilters(false);
-  if (b.id === 'reset') { S.folders.clear(); S.types.clear(); S.key = S.val = ''; S.q = ''; $('#q').value = ''; S.local = null; }
+  if (b.id === 'reset') { S.folders.clear(); S.hideVals.clear(); S.key = S.val = ''; S.q = ''; $('#q').value = ''; S.local = null; }
+  else if (b.dataset.h !== undefined) { const v = b.dataset.h; S.hideVals.has(v) ? S.hideVals.delete(v) : S.hideVals.add(v); }
+  else if (b.dataset.all !== undefined) { S.hideVals.clear(); if (b.dataset.all === '0') Object.keys(countVals(S.shapeBy)).forEach(v => S.hideVals.add(v)); }
+  else if (b.dataset.o !== undefined) { const v = b.dataset.o; S.outlined.has(v) ? S.outlined.delete(v) : S.outlined.add(v); restyle(); }
   else if (b.dataset.g) { const set = S[b.dataset.g], v = b.dataset.v; set.has(v) ? set.delete(v) : set.add(v); }
   else if (b.dataset.k) { const k = b.dataset.k; S.hidden.has(k) ? S.hidden.delete(k) : S.hidden.add(k); }
   else if (b.dataset.t) S[b.dataset.t] = !S[b.dataset.t];
@@ -259,6 +319,10 @@ $('#filters').addEventListener('click', e => {
 $('#filters').addEventListener('change', e => {
   if (e.target.id === 'pk') { S.key = e.target.value; S.val = ''; }
   if (e.target.id === 'pv') S.val = e.target.value;
+  if (e.target.id === 'gs') { S.shapeBy = e.target.value; S.hideVals.clear(); if (S.fillBy === S.shapeBy) S.fillBy = ''; }
+  if (e.target.id === 'gf') { S.fillBy = e.target.value; S.outlined = new Set(S.fillBy ? Object.keys(countVals(S.fillBy)).filter(v => OPEN_WORDS.test(v)) : []); }
+  if (e.target.id === 'gz') S.sizeBy = e.target.value;
+  if (['gs', 'gf'].includes(e.target.id)) restyle();
   renderFilters(); apply();
 });
 function toggleFilters(on) { $('#filters').hidden = !on; $('#fbtn').setAttribute('aria-pressed', on); if (on) renderFilters(); }
@@ -286,7 +350,7 @@ function list(title, pairs) {
 // Open note j from a link or the file tree; clear filters that would hide it.
 function go(j) {
   if (!nodes[j]) return;
-  if (S.local === null && !passes(j)) { S.folders.clear(); S.types.clear(); S.key = S.val = S.q = ''; $('#q').value = ''; apply(); }
+  if (S.local === null && !passes(j)) { S.folders.clear(); S.hideVals.clear(); S.key = S.val = S.q = ''; $('#q').value = ''; apply(); }
   open(j, true);
 }
 
@@ -380,6 +444,7 @@ note.addEventListener('click', e => {
 });
 addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#filters').hidden) toggleFilters(false); else if (!tree.hidden) toggleTree(false); else if (!note.hidden) close(); } });
 
+restyle();
 apply();
 }
 </script>

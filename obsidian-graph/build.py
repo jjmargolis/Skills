@@ -3,6 +3,7 @@
 graph of its notes with filters and a reader for each note.
 
     python3 build.py VAULT -o vault.html [--title NAME] [--exclude GLOB ...] [--hide-links PROPERTY ...]
+                     [--glyph TYPE=SHAPE[:STYLE] ...]
 
 Notes are the vault's .md files. Edges come from [[wikilinks]] and relative
 markdown links in the body (kind "body") and from [[wikilinks]] inside
@@ -168,6 +169,44 @@ def prop_links(props, i, res, edges):
         walk(v, k)
 
 
+# Glyph library: each glyph is a list of (paint, path) parts in a [-1, 1] box.
+# Paint "f" is a filled silhouette, "s" a stroked line. Drawn filled (settled)
+# or outlined (open); the viewer's Fill control switches between them.
+SHAPES = {
+    "circle": [("f", "M1 0A1 1 0 1 1-1 0A1 1 0 1 1 1 0Z")],
+    "square": [("f", "M-.85-.85H.85V.85H-.85Z")],
+    "diamond": [("f", "M0-1.2L1.2 0 0 1.2-1.2 0Z")],
+    "triangle": [("f", "M0-1.2L1.04 .6H-1.04Z")],
+    "hexagon": [("f", "M.935 .54L0 1.08-.935 .54V-.54L0-1.08 .935-.54Z")],
+    "plus": [("f", "M-.36-1.1H.36V-.36H1.1V.36H.36V1.1H-.36V.36H-1.1V-.36H-.36Z")],
+    "hub": [("s", "M.9 0A.9 .9 0 1 1-.9 0A.9 .9 0 1 1 .9 0Z"), ("f", "M.42 0A.42 .42 0 1 1-.42 0A.42 .42 0 1 1 .42 0Z")],
+    "question": [("s", "M-.5-.5C-.5-1.15 .55-1.15 .55-.5C.55-.05 0-.05 0 .4"), ("f", "M.2 .92A.2 .2 0 1 1-.2 .92A.2 .2 0 1 1 .2 .92Z")],
+    "portico": [("f", "M-1.1-.4L0-1.15 1.1-.4Z M-.95-.25H-.55V.7H-.95Z M-.2-.25H.2V.7H-.2Z M.55-.25H.95V.7H.55Z M-1.1 .82H1.1V1.1H-1.1Z")],
+    "flag": [("f", "M-.9-1.15H-.66V1.15H-.9Z M-.66-1.1L1.1-.6-.66-.1Z")],
+    "book": [("f", "M-.08-.62C-.4-.95-.85-.95-1.15-.78V.85C-.85 .68-.4 .68-.08 .98Z M.08-.62C.4-.95 .85-.95 1.15-.78V.85C.85 .68 .4 .68 .08 .98Z")],
+}
+
+# Glyph for common `type` values: (shape, style). Types not listed take unused
+# shapes in order of frequency; override with --glyph.
+GLYPHS = {
+    "map": ("hub", "fill"), "moc": ("hub", "fill"), "index": ("hub", "fill"),
+    "spec": ("plus", "fill"), "report": ("square", "fill"), "design": ("hexagon", "fill"),
+    "decision": ("diamond", "fill"), "question": ("question", "fill"), "risk": ("triangle", "fill"),
+    "org": ("portico", "fill"), "company": ("flag", "fill"),
+    "source": ("book", "fill"), "note": ("circle", "fill"),
+}
+STYLES = {"fill", "open"}
+
+
+def glyph_arg(text):
+    """Parse TYPE=SHAPE[:STYLE] from --glyph."""
+    t, _, g = text.partition("=")
+    shape, _, style = g.partition(":")
+    if not t or shape not in SHAPES or (style or "fill") not in STYLES:
+        raise argparse.ArgumentTypeError(f"expected TYPE=SHAPE[:STYLE], shape in {sorted(SHAPES)}, style in {sorted(STYLES)}")
+    return t, (shape, style or "fill")
+
+
 UPDATED_KEYS = ("updated", "modified", "last_updated", "last-updated", "date_modified")
 
 
@@ -238,11 +277,15 @@ def main():
     ap.add_argument("--title", help="page title (default: the vault folder's name)")
     ap.add_argument("--hide-links", action="append", default=[], metavar="PROPERTY",
                     help="property whose links start hidden (the viewer can show them); repeatable")
+    ap.add_argument("--glyph", action="append", default=[], type=glyph_arg, metavar="TYPE=SHAPE[:STYLE]",
+                    help=f"glyph for a note type, e.g. person=triangle:open; shapes: {', '.join(SHAPES)}; repeatable")
     ap.add_argument("--exclude", action="append", default=[], help="glob on vault-relative paths; repeatable")
     a = ap.parse_args()
     vault = os.path.abspath(a.vault)
     data = build(vault, a.exclude)
     data["hide"] = a.hide_links
+    data["glyphs"] = {**GLYPHS, **dict(a.glyph)}
+    data["shapes"] = SHAPES
     title = a.title or os.path.basename(vault.rstrip("/"))
     blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     template = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "viewer.html"), encoding="utf-8").read()
