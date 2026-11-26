@@ -1,0 +1,385 @@
+<title>__TITLE__</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Bodoni:wght@700&family=Tinos:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* VOICE work: a reader's tool for one person's notes
+   IDEA a trade-book index come alive: the graph is the plate, the note is the page
+   PICTURE the force-directed graph of every note, filling the screen
+   COLOUR paper white and ink black; greys for faded nodes and rules; night inverts
+   TYPE Libre Bodoni Bold display + Times (Tinos) body and small caps
+   LAYOUT laptop: graph left, note page 460px right; phone: graph full, note as a bottom sheet */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#111);--ink:light-dark(#111,#ecebe6);--mute:light-dark(#6b6b6b,#9a9a96);--rule:light-dark(#d4d4d4,#3a3a3a);--soft:light-dark(#f4f4f2,#1b1b1b)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.5 "Times New Roman",Times,Tinos,serif;overflow:hidden;display:grid;grid-template-rows:auto 1fr}
+button,input,select{font:inherit;color:inherit}
+.sc{font-variant:small-caps;letter-spacing:.06em;text-transform:lowercase}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));padding-top:calc(10px + env(safe-area-inset-top,0px));border-bottom:.5px solid var(--ink)}
+header h1{font:700 22px/1.1 "Libre Bodoni",Didot,"Bodoni 72",serif;margin:0;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#count{color:var(--mute);font-size:15px;white-space:nowrap}
+.tools{display:flex;gap:6px;flex:1 1 320px}
+#q{flex:1;font-size:16px;padding:7px 10px;border:.5px solid var(--ink);background:var(--bg);border-radius:0}
+.btn{background:var(--bg);border:.5px solid var(--ink);padding:6px 12px;min-height:40px;cursor:pointer}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.icon{width:40px;padding:0;display:grid;place-items:center;flex:none}
+.btn[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.btn:focus-visible,#q:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+main{position:relative;display:flex;overflow:hidden}
+#graph{position:relative;overflow:hidden;touch-action:none;flex:1}
+#tree{flex:none;width:280px;overflow:auto;overscroll-behavior:contain;background:var(--bg);border-right:.5px solid var(--ink);padding:10px 0 calc(24px + env(safe-area-inset-bottom,0px));z-index:5;font-size:16px}
+#tree summary,#tree .file{display:block;width:100%;text-align:left;padding:5px 12px 5px calc(14px + var(--d) * 14px);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;list-style:none;border:0;background:none;min-height:34px}
+#tree summary::-webkit-details-marker{display:none}
+#tree summary::before{content:"\25B8";display:inline-block;width:1em;color:var(--mute);transition:transform .15s}
+#tree details[open]>summary::before{transform:rotate(90deg)}
+#tree .file{color:var(--ink);padding-left:calc(14px + 1em + var(--d) * 14px)}
+#tree .file.cur{background:var(--ink);color:var(--bg)}
+#tree .file:hover,#tree summary:hover{background:var(--soft)}
+#tree .file.cur:hover{background:var(--ink)}
+#tree .file.out{color:var(--mute)}
+#graph canvas{display:block}
+#filters{position:absolute;top:10px;left:max(10px,env(safe-area-inset-left,0px));width:min(360px,calc(100% - 20px));max-height:calc(100% - 20px);overflow:auto;background:var(--bg);border:.5px solid var(--ink);padding:14px 16px;z-index:3}
+#filters h3{margin:14px 0 6px;font-size:15px;font-weight:400;border-bottom:.5px solid var(--rule)}
+#filters h3:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:.5px solid var(--rule);background:var(--bg);padding:3px 9px;min-height:32px;cursor:pointer;font-size:15px}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip small{color:var(--mute);margin-left:4px}
+.chip[aria-pressed=true] small{color:inherit;opacity:.7}
+.row{display:flex;gap:8px;align-items:center;margin:6px 0}
+.row select{flex:1;padding:6px;border:.5px solid var(--ink);background:var(--bg);font-size:16px}
+#filters .foot{display:flex;justify-content:space-between;margin-top:14px}
+#note{background:var(--bg);overflow:auto;overscroll-behavior:contain;z-index:4;flex:none}
+#note .inner{padding:18px max(18px,env(safe-area-inset-right,0px)) calc(40px + env(safe-area-inset-bottom,0px)) 22px;max-width:40em}
+.navbar{display:flex;gap:6px;position:sticky;top:0;background:var(--bg);padding:8px 14px;border-bottom:.5px solid var(--rule);z-index:1}
+.navbar .grab{flex:1;border:0;background:none;cursor:pointer}
+.navbar .grab::before{content:"";display:block;width:40px;height:4px;margin:auto;background:var(--rule);border-radius:2px}
+.meta{color:var(--mute);font-size:15px;text-align:center;overflow-wrap:anywhere}
+#note h2.title{font:700 28px/1.12 "Libre Bodoni",Didot,"Bodoni 72",serif;text-align:center;margin:8px 0 18px;letter-spacing:-.01em}
+.props{width:100%;border-collapse:collapse;font-size:15px;margin:0 0 18px;border-top:.5px solid var(--ink);border-bottom:.5px solid var(--ink)}
+.props th{text-align:left;font-weight:400;color:var(--mute);padding:4px 10px 4px 0;vertical-align:top;white-space:nowrap}
+.props td{padding:4px 0;overflow-wrap:anywhere}
+.body{hyphens:auto;overflow-wrap:break-word}
+.body h1,.body h2,.body h3,.body h4{font-family:"Libre Bodoni",Didot,"Bodoni 72",serif;font-weight:700;line-height:1.2;margin:1.4em 0 .5em}
+.body h1{font-size:23px;text-align:center}
+.body h2{font-size:20px}
+.body h3,.body h4{font-size:17px}
+.body p{margin:0}
+.body p+p{text-indent:1.5em}
+.body ul,.body ol,.body pre,.body blockquote,.body .scroll,.body p+ul,.body p+ol{margin:.7em 0}
+.body blockquote{margin-inline:1.5em;font-style:italic}
+.body code{font:14px/1.4 "Courier New",Courier,monospace}
+.body pre{overflow-x:auto;background:var(--soft);padding:10px}
+.body .scroll{overflow-x:auto}
+.body table{border-collapse:collapse;font-size:15px;border-top:.5px solid var(--ink);border-bottom:.5px solid var(--ink)}
+.body th{font-weight:400;font-variant:small-caps;letter-spacing:.04em;text-transform:lowercase;border-bottom:.5px solid var(--rule)}
+.body th,.body td{padding:4px 8px;text-align:left;vertical-align:top}
+.body hr{border:0;border-top:.5px solid var(--ink);width:5pc;margin:1.5em auto}
+.body img{display:none}
+.body a,.links a,.props a{color:inherit;text-decoration:underline;text-decoration-thickness:.5px;text-underline-offset:2px}
+.body a[href^="#n="]{text-decoration-style:dotted}
+.missing{color:var(--mute)}
+.links{margin-top:28px;border-top:.5px solid var(--ink);padding-top:10px}
+.links h4{font-weight:400;margin:12px 0 4px;font-size:15px}
+.links ol{list-style:none;padding:0;margin:0}
+.links li{padding:3px 0;display:flex;gap:10px;justify-content:space-between}
+.links li span{color:var(--mute);font-style:italic;font-size:15px;white-space:nowrap}
+.empty{color:var(--mute);font-style:italic}
+#hint{position:absolute;bottom:calc(12px + env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;color:var(--mute);font-style:italic;font-size:15px;pointer-events:none}
+
+@media(min-width:900px){#note{width:460px;border-left:.5px solid var(--ink)}.navbar .grab{visibility:hidden}}
+@media(max-width:899px){#note{position:absolute;left:0;right:0;bottom:0;height:62%;border-top:.5px solid var(--ink);box-shadow:0 -1px 0 var(--bg)}#note.full{height:100%}#tree{position:absolute;left:0;top:0;bottom:0;width:min(320px,86%);padding-left:env(safe-area-inset-left,0px);box-shadow:1px 0 0 var(--ink)}}
+</style>
+
+<header>
+  <h1>__TITLE__</h1>
+  <span id="count"></span>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Search" autocomplete="off" aria-label="Search notes">
+    <button id="fit" class="btn icon" aria-label="Reset: zoom out to the whole graph" title="Reset view"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5"/></svg></button>
+    <button id="tbtn" class="btn icon" aria-pressed="false" aria-controls="tree" aria-label="Files" title="Files"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h5l1.5 2H17v10H3z"/></svg></button>
+    <button id="lbtn" class="btn icon" aria-pressed="false" aria-label="Show all labels" title="Labels"><span aria-hidden="true" style="font:italic 17px/1 'Times New Roman',Times,Tinos,serif">Aa</span></button>
+    <button id="fbtn" class="btn icon" aria-pressed="false" aria-controls="filters" aria-label="Filters" title="Filters"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h14l-5.5 6.5V16l-3-1.5v-4z"/></svg></button>
+  </div>
+</header>
+<main id="main">
+  <nav id="tree" hidden aria-label="Files"></nav>
+  <div id="graph"></div>
+  <p id="hint">Drag to pan, pinch to zoom, tap a note to read it</p>
+  <aside id="filters" hidden></aside>
+  <article id="note" hidden></article>
+</main>
+
+<script id="vault" type="application/json">__DATA__</script>
+<script src="https://cdn.jsdelivr.net/npm/force-graph@1.43.5/dist/force-graph.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script>
+{
+const V = JSON.parse(document.getElementById('vault').textContent);
+const N = V.notes;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// Adjacency, degree and lowercased search text, once.
+const out = N.map(() => []), inc = N.map(() => []);
+V.links.forEach(([s, t, k]) => { out[s].push([t, k]); inc[t].push([s, k]); });
+// Node size follows backlinks: a note many others cite is central; one that cites many is not.
+const nodes = N.map((n, i) => ({ id: i, deg: 0 }));
+const kinds = {};
+V.links.forEach(([, , k]) => kinds[k] = (kinds[k] || 0) + 1);
+const hay = N.map(n => (n.t + ' ' + n.p + ' ' + n.b).toLowerCase());
+const topFolder = f => f.split('/').slice(0, 2).join('/');
+
+// Filter state.
+const S = { q: '', folders: new Set(), types: new Set(), key: '', val: '', hidden: new Set(V.hide || []), orphans: true, local: null, labels: false };
+const folders = {}, types = {}, keys = {};
+N.forEach(n => {
+  const f = n.f.split('/');
+  for (let d = 1; d <= Math.min(2, f.length); d++) { const k = f.slice(0, d).join('/'); if (k) folders[k] = (folders[k] || 0) + 1; }
+  if (n.y) types[n.y] = (types[n.y] || 0) + 1;
+  Object.keys(n.m).forEach(k => { if (k !== 'type' && k !== 'title') keys[k] = (keys[k] || 0) + 1; });
+});
+const flat = v => v == null ? [] : Array.isArray(v) ? v.flatMap(flat) : typeof v === 'object' ? Object.values(v).flatMap(flat) : [String(v)];
+const clean = s => s.replace(/\[\[([^\]|]*)(\|[^\]]*)?\]\]/g, '$1');
+
+function passes(i) {
+  const n = N[i];
+  if (S.folders.size && ![...S.folders].some(f => n.f === f || n.f.startsWith(f + '/'))) return false;
+  if (S.types.size && !S.types.has(n.y)) return false;
+  if (S.key) { if (!(S.key in n.m)) return false; if (S.val && !flat(n.m[S.key]).map(clean).includes(S.val)) return false; }
+  if (S.q) { const h = hay[i]; if (!S.q.split(/\s+/).every(w => h.includes(w))) return false; }
+  return true;
+}
+
+function localSet(c, depth) {
+  const seen = new Set([c]); let ring = [c];
+  for (let d = 0; d < depth; d++) {
+    const next = [];
+    ring.forEach(i => out[i].concat(inc[i]).forEach(([j, k]) => { if (!S.hidden.has(k) && !seen.has(j)) { seen.add(j); next.push(j); } }));
+    ring = next;
+  }
+  return seen;
+}
+
+// Graph.
+const el = $('#graph');
+let ink, bg;
+const readColors = () => { const c = getComputedStyle(document.body); ink = c.color; bg = c.backgroundColor; };
+readColors();
+let sel = null, near = new Set();
+const fade = (c, a) => { const m = c.match(/\d+(\.\d+)?/g); return m ? `rgba(${m[0]},${m[1]},${m[2]},${a})` : c; };
+const radius = n => 2.2 + Math.sqrt(n.deg) * 1.6;
+
+const G = ForceGraph()(el)
+  .backgroundColor('rgba(0,0,0,0)')
+  .nodeId('id')
+  .nodeVal(n => radius(n) ** 2 / 16)
+  .nodeRelSize(4)
+  .nodeLabel(n => esc(N[n.id].t))
+  .linkColor(l => { const on = sel !== null && (l.source.id === sel || l.target.id === sel); return on ? fade(ink, .9) : fade(ink, sel === null ? .16 : .06); })
+  .linkWidth(l => sel !== null && (l.source.id === sel || l.target.id === sel) ? 1.2 : .5)
+  .linkLineDash(l => l.k === 'body' ? null : [2, 2])
+  .cooldownTime(9000)
+  .d3AlphaDecay(.03)
+  .nodeCanvasObject((n, ctx, k) => {
+    const r = radius(n) / Math.max(1, k / 1.5) ** .6, on = sel === null || near.has(n.id);
+    ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 2 * Math.PI);
+    ctx.fillStyle = on ? ink : fade(ink, .14); ctx.fill();
+    if (n.id === sel) { ctx.lineWidth = 1.5 / k; ctx.strokeStyle = ink; ctx.beginPath(); ctx.arc(n.x, n.y, r + 3 / k, 0, 2 * Math.PI); ctx.stroke(); }
+    const show = S.labels || (sel !== null && near.has(n.id)) || (sel === null && r * k > 7) || k > 3.2;
+    if (!show) return;
+    const fs = 13 / k, t = N[n.id].t, cap = n.id === sel ? 60 : 28, label = t.length > cap ? t.slice(0, cap - 1) + '…' : t;
+    ctx.font = `${n.id === sel ? 'bold ' : ''}${fs}px "Times New Roman", Times, Tinos, serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.lineWidth = 3 / k; ctx.strokeStyle = bg; ctx.strokeText(label, n.x, n.y + r + 2 / k);
+    ctx.fillStyle = on ? ink : fade(ink, .3); ctx.fillText(label, n.x, n.y + r + 2 / k);
+  })
+  .nodePointerAreaPaint((n, color, ctx, k) => { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(n.x, n.y, Math.max(radius(n), 9 / k), 0, 2 * Math.PI); ctx.fill(); })
+  .onNodeClick(n => open(n.id, true))
+  .onBackgroundClick(() => { if (sel !== null) { sel = null; near = new Set(); G.refresh?.(); redraw(); } });
+G.d3Force('charge').strength(-38).distanceMax(400);
+G.d3Force('link').distance(28);
+const redraw = () => G.linkColor(G.linkColor());
+let fitted = false;
+G.onEngineStop(() => { if (!fitted) { fitted = true; G.zoomToFit(500, 40); } });
+const size = new ResizeObserver(() => G.width(el.clientWidth).height(el.clientHeight));
+size.observe(el);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readColors(); redraw(); });
+new MutationObserver(() => { readColors(); redraw(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+function apply(refit = true) {
+  let keep = N.map((_, i) => passes(i));
+  if (S.local !== null) { const L = localSet(S.local, 2); keep = keep.map((v, i) => v && L.has(i) || i === S.local); }
+  const links = V.links.filter(([s, t, k]) => keep[s] && keep[t] && !S.hidden.has(k)).map(([s, t, k]) => ({ source: s, target: t, k }));
+  // Size by backlinks among the links on screen: distinct notes that point here.
+  const cites = nodes.map(() => new Set());
+  links.forEach(l => cites[l.target].add(l.source));
+  nodes.forEach((n, i) => n.deg = cites[i].size);
+  if (!S.orphans) { const linked = new Set(links.flatMap(l => [l.source, l.target])); keep = keep.map((v, i) => v && (linked.has(i) || i === sel)); }
+  const shown = nodes.filter((_, i) => keep[i]);
+  tree.querySelectorAll('.file').forEach(b => b.classList.toggle('out', !keep[+b.dataset.i]));
+  fitted = !refit;
+  G.graphData({ nodes: shown, links });
+  $('#count').textContent = shown.length === N.length ? `${N.length} notes` : `${shown.length} of ${N.length} notes`;
+}
+
+// Filter panel.
+const chip = (group, v, n, on) => `<button class="chip" data-g="${group}" data-v="${esc(v)}" aria-pressed="${on}">${esc(v)}<small>${n}</small></button>`;
+function renderFilters() {
+  const fk = Object.keys(folders).sort();
+  const tk = Object.keys(types).sort();
+  const kk = Object.keys(keys).sort();
+  const vals = S.key ? [...new Set(N.flatMap(n => S.key in n.m ? flat(n.m[S.key]).map(clean) : []))].sort() : [];
+  $('#filters').innerHTML = `
+    ${fk.length ? `<h3 class="sc">Folder</h3><div class="chips">${fk.map(f => chip('folders', f, folders[f], S.folders.has(f))).join('')}</div>` : ''}
+    ${tk.length ? `<h3 class="sc">Type</h3><div class="chips">${tk.map(t => chip('types', t, types[t], S.types.has(t))).join('')}</div>` : ''}
+    ${kk.length ? `<h3 class="sc">Property</h3>
+      <div class="row"><select id="pk" aria-label="Property"><option value="">Any property</option>${kk.map(k => `<option ${k === S.key ? 'selected' : ''} value="${esc(k)}">${esc(k)} (${keys[k]})</option>`).join('')}</select></div>
+      ${S.key ? `<div class="row"><select id="pv" aria-label="Value"><option value="">Any value</option>${vals.slice(0, 500).map(v => `<option ${v === S.val ? 'selected' : ''} value="${esc(v)}">${esc(v.length > 60 ? v.slice(0, 58) + '…' : v)}</option>`).join('')}</select></div>` : ''}` : ''}
+    <h3 class="sc">Links</h3>
+    <div class="chips">${Object.keys(kinds).sort((a, b) => (a !== 'body') - (b !== 'body') || a.localeCompare(b)).map(k => `<button class="chip" data-k="${esc(k)}" aria-pressed="${!S.hidden.has(k)}">${k === 'body' ? 'in text' : esc(k)}<small>${kinds[k]}</small></button>`).join('')}</div>
+    <h3 class="sc">Show</h3>
+    <div class="chips">
+      <button class="chip" data-t="orphans" aria-pressed="${S.orphans}">Unlinked notes</button>
+    </div>
+    <div class="foot"><button class="btn sc" id="reset">Clear filters</button><button class="btn sc" id="fclose">Done</button></div>`;
+}
+$('#filters').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'fclose') return toggleFilters(false);
+  if (b.id === 'reset') { S.folders.clear(); S.types.clear(); S.key = S.val = ''; S.q = ''; $('#q').value = ''; S.local = null; }
+  else if (b.dataset.g) { const set = S[b.dataset.g], v = b.dataset.v; set.has(v) ? set.delete(v) : set.add(v); }
+  else if (b.dataset.k) { const k = b.dataset.k; S.hidden.has(k) ? S.hidden.delete(k) : S.hidden.add(k); }
+  else if (b.dataset.t) S[b.dataset.t] = !S[b.dataset.t];
+  renderFilters(); apply();
+});
+$('#filters').addEventListener('change', e => {
+  if (e.target.id === 'pk') { S.key = e.target.value; S.val = ''; }
+  if (e.target.id === 'pv') S.val = e.target.value;
+  renderFilters(); apply();
+});
+function toggleFilters(on) { $('#filters').hidden = !on; $('#fbtn').setAttribute('aria-pressed', on); if (on) renderFilters(); }
+$('#fbtn').addEventListener('click', () => toggleFilters($('#filters').hidden));
+let qt;
+$('#q').addEventListener('input', e => { clearTimeout(qt); qt = setTimeout(() => { S.q = e.target.value.trim().toLowerCase(); apply(); }, 180); });
+
+// Note reader.
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const fmtDate = d => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || ''); return m ? `${+m[3]} ${MONTHS[m[2] - 1]} ${m[1]}` : (d || 'unknown'); };
+const hist = [];
+const note = $('#note');
+const wide = matchMedia('(min-width: 900px)');
+const link = (i, extra) => `<li><a href="#n=${i}">${esc(N[i].t)}</a>${extra ? `<span>${esc(extra)}</span>` : ''}</li>`;
+const propVal = v => esc(flat(v).join(', ')).replace(/\[\[([^\]|]*)(?:\|([^\]]*))?\]\]/g, (_, t, a) => {
+  const i = N.findIndex(n => n.p.toLowerCase().replace(/\.md$/, '').endsWith(t.trim().toLowerCase()));
+  return i < 0 ? `<span class="missing">${a || t}</span>` : `<a href="#n=${i}">${a || t}</a>`;
+});
+function list(title, pairs) {
+  const seen = new Map();
+  pairs.forEach(([j, k]) => seen.set(j, [...(seen.get(j) || []), k]));
+  const rows = [...seen].sort((a, b) => N[a[0]].t.localeCompare(N[b[0]].t)).map(([j, ks]) => link(j, ks.filter(k => k !== 'body').join(', ')));
+  return `<h4 class="sc">${title} (${rows.length})</h4>${rows.length ? `<ol>${rows.join('')}</ol>` : '<p class="empty">None</p>'}`;
+}
+// Open note j from a link or the file tree; clear filters that would hide it.
+function go(j) {
+  if (!nodes[j]) return;
+  if (S.local === null && !passes(j)) { S.folders.clear(); S.types.clear(); S.key = S.val = S.q = ''; $('#q').value = ''; apply(); }
+  open(j, true);
+}
+
+// File tree: folders first, then notes by file name, as Obsidian lists them.
+const tree = $('#tree');
+function renderTree() {
+  const root = { dirs: {}, files: [] };
+  N.forEach((n, i) => { let d = root; n.f.split('/').filter(Boolean).forEach(x => d = d.dirs[x] ??= { dirs: {}, files: [] }); d.files.push(i); });
+  const name = i => N[i].p.split('/').pop().replace(/\.md$/i, '');
+  const walk = (d, depth) =>
+    Object.keys(d.dirs).sort((a, b) => a.localeCompare(b)).map(k => `<details data-dir><summary style="--d:${depth}">${esc(k)}</summary>${walk(d.dirs[k], depth + 1)}</details>`).join('') +
+    d.files.sort((a, b) => name(a).localeCompare(name(b))).map(i => `<button class="file" data-i="${i}" style="--d:${depth}" title="${esc(N[i].t)}">${esc(name(i))}</button>`).join('');
+  tree.innerHTML = walk(root, 0);
+}
+function markTree(i) {
+  tree.querySelectorAll('.file.cur').forEach(b => b.classList.remove('cur'));
+  const b = tree.querySelector(`.file[data-i="${i}"]`); if (!b) return;
+  b.classList.add('cur');
+  for (let d = b.parentElement; d && d !== tree; d = d.parentElement) if (d.tagName === 'DETAILS') d.open = true;
+  if (!tree.hidden) b.scrollIntoView({ block: 'nearest' });
+}
+function toggleTree(on) {
+  tree.hidden = !on; $('#tbtn').setAttribute('aria-pressed', on);
+  if (on && sel !== null) markTree(sel);
+  requestAnimationFrame(() => G.width(el.clientWidth).height(el.clientHeight));
+}
+$('#tbtn').addEventListener('click', () => toggleTree(tree.hidden));
+tree.addEventListener('click', e => { const b = e.target.closest('.file'); if (!b) return; if (!wide.matches) toggleTree(false); go(+b.dataset.i); });
+renderTree();
+
+function open(i, push) {
+  if (push && sel !== null && sel !== i) hist.push(sel);
+  sel = i; near = new Set([i, ...out[i].map(x => x[0]), ...inc[i].map(x => x[0])]);
+  const n = N[i];
+  const props = Object.entries(n.m).filter(([k]) => k !== 'title');
+  const html = DOMPurify.sanitize(marked.parse(n.b, { gfm: true }));
+  note.innerHTML = `
+    <div class="navbar">
+      <button class="btn icon" id="back" aria-label="Back" title="Back" ${hist.length ? '' : 'disabled'}><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l-6 6 6 6"/></svg></button>
+      <button class="btn icon" id="local" aria-pressed="${S.local === i}" aria-label="Local graph" title="Local graph"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="2.2"/><circle cx="4" cy="5" r="1.4"/><circle cx="16" cy="5" r="1.4"/><circle cx="10" cy="17" r="1.4"/><path d="M8.3 8.6 5.2 6M11.7 8.6 14.8 6M10 12.2v3.4"/></svg></button>
+      <button class="grab" id="grab" aria-label="Expand or shrink"></button>
+      <button class="btn icon" id="close" aria-label="Close note" title="Close (Esc)"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"/></svg></button>
+    </div>
+    <div class="inner">
+      <div class="meta"><i>Updated ${esc(fmtDate(n.d))}</i></div>
+      <div class="meta sc">${esc(n.f || 'vault root')}${n.y ? ' \u00b7 ' + esc(n.y) : ''}</div>
+      <h2 class="title">${esc(n.t)}</h2>
+      ${props.length ? `<table class="props">${props.map(([k, v]) => `<tr><th class="sc">${esc(k)}</th><td>${propVal(v)}</td></tr>`).join('')}</table>` : ''}
+      <div class="body">${html || '<p class="empty">This note is empty.</p>'}</div>
+      <div class="links">
+        ${list('Links', out[i])}
+        ${list('Backlinks', inc[i])}
+        ${n.u.length ? `<h4 class="sc">Unresolved links (${n.u.length})</h4><p class="missing">${n.u.map(esc).join(', ')}</p>` : ''}
+        <p class="meta" style="margin-top:18px">${esc(n.p)}</p>
+      </div>
+    </div>`;
+  note.querySelectorAll('.body table').forEach(t => { const w = document.createElement('div'); w.className = 'scroll'; t.replaceWith(w); w.append(t); });
+  note.querySelectorAll('.body a:not([href^="#n="])').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
+  note.hidden = false; note.scrollTop = 0; markTree(i);
+  $('#main').classList.add('open');
+  const h = $('#hint'); if (h) h.hidden = true;
+  if (S.local !== null && S.local !== i) { S.local = i; apply(); }
+  requestAnimationFrame(() => {
+    G.width(el.clientWidth).height(el.clientHeight);
+    const d = nodes[i];
+    if (d.x === undefined) return redraw();
+    const k = Math.max(G.zoom(), 1.8);
+    const shift = wide.matches ? 0 : (note.offsetHeight / 2) / k;
+    G.centerAt(d.x, d.y + shift, 600); G.zoom(k, 600);
+    redraw();
+  });
+}
+// Close, like Escape: close the note and leave the local graph, keeping the view where it is.
+function close() {
+  const c = G.centerAt();
+  note.hidden = true; note.classList.remove('full'); $('#main').classList.remove('open'); markTree(-1);
+  sel = null; near = new Set(); hist.length = 0;
+  if (S.local !== null) { S.local = null; apply(false); }
+  requestAnimationFrame(() => { G.width(el.clientWidth).height(el.clientHeight); G.centerAt(c.x, c.y); redraw(); });
+}
+$('#fit').addEventListener('click', () => G.zoomToFit(500, 40));
+$('#lbtn').addEventListener('click', e => { S.labels = !S.labels; e.currentTarget.setAttribute('aria-pressed', S.labels); redraw(); });
+note.addEventListener('click', e => {
+  const a = e.target.closest('a[href^="#n="]');
+  if (a) { e.preventDefault(); return go(+a.getAttribute('href').slice(3)); }
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'back' && hist.length) open(hist.pop(), false);
+  if (b.id === 'close') close();
+  if (b.id === 'grab') note.classList.toggle('full');
+  if (b.id === 'local') { S.local = S.local === sel ? null : sel; apply(); open(sel, false); }
+});
+addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#filters').hidden) toggleFilters(false); else if (!tree.hidden) toggleTree(false); else if (!note.hidden) close(); } });
+
+apply();
+}
+</script>
