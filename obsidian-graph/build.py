@@ -141,10 +141,14 @@ def rewrite(body, i, res, edges, missing):
             edges.add((i, j, "body"))
         return f"[{text}](#n={j})"
 
-    parts = CODE.split(body)
-    for k in range(0, len(parts), 2):
-        parts[k] = MDLINK.sub(md, WIKI.sub(wiki, parts[k]))
-    return "".join(parts)
+    # Park code in placeholders so links inside it stay literal, while a link
+    # whose text is code, [`spec.md`](spec.md), still matches.
+    code = []
+    def park(m):
+        code.append(m.group(0))
+        return f"\x00{len(code) - 1}\x00"
+    body = MDLINK.sub(md, WIKI.sub(wiki, CODE.sub(park, body)))
+    return re.sub(r"\x00(\d+)\x00", lambda m: code[int(m.group(1))], body)
 
 
 def prop_links(props, i, res, edges):
