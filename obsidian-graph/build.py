@@ -217,11 +217,13 @@ def build(vault, excludes):
         prop_links(props, i, res, edges)
         h1 = H1.search(CODE.sub("", body))
         name = posixpath.basename(p)[:-3]
-        title = str(props.get("title") or (h1.group(1) if h1 else "") or name)
+        aliases = props.get("aliases") or []
+        alias = aliases[0] if isinstance(aliases, list) and aliases else aliases if isinstance(aliases, str) else ""
+        generic = name.lower() in ("readme", "index")
+        title = str(props.get("title") or (h1.group(1) if h1 else "") or alias
+                    or (posixpath.basename(posixpath.dirname(p)) if generic else "") or name)
         if h1 and h1.group(1) == title:  # the reader prints the title; drop the duplicate
             body = body.replace(h1.group(0), "", 1)
-        if name.lower() in ("readme", "index") and not props.get("title") and not h1:
-            title = posixpath.basename(posixpath.dirname(p)) or name
         notes.append({"p": p, "t": title, "f": posixpath.dirname(p), "y": str(props.get("type", "")),
                       "m": props, "b": body, "u": sorted(missing),
                       "d": updated(props, p, vault, dates)})
