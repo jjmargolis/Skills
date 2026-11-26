@@ -5,7 +5,7 @@ description: Compile an Obsidian vault into one read-only HTML page (touch-frien
 
 # Obsidian graph
 
-The page is a snapshot of an Obsidian vault: a force-directed graph of every note that can be dragged, panned and pinch-zoomed, filters by folder, `type`, any frontmatter property and search text, and a reader that shows a tapped note's properties, rendered text, links and backlinks, with navigation between notes. `build.py` writes it from the vault; `viewer.html` is the page template. The page is read-only; to update it, rebuild and republish.
+The page is a snapshot of an Obsidian vault: a force-directed graph of every note that can be dragged, panned and pinch-zoomed, filters by folder, `type`, any frontmatter property and search text, a Labels toggle that names every node, and a reader that shows a tapped note's properties, rendered text, links and backlinks, with navigation between notes and a Reset button that closes the note and fits the whole graph back in view. `build.py` writes it from the vault; `viewer.html` is the page template. The page is read-only; to update it, rebuild and republish.
 
 ## Steps
 
