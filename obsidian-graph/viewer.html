@@ -124,12 +124,14 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 const out = N.map(() => []), inc = N.map(() => []);
 V.links.forEach(([s, t, k]) => { out[s].push([t, k]); inc[t].push([s, k]); });
 // Node size follows backlinks: a note many others cite is central; one that cites many is not.
-const nodes = N.map((n, i) => ({ id: i, deg: new Set(inc[i].map(x => x[0])).size }));
+const nodes = N.map((n, i) => ({ id: i, deg: 0 }));
+const kinds = {};
+V.links.forEach(([, , k]) => kinds[k] = (kinds[k] || 0) + 1);
 const hay = N.map(n => (n.t + ' ' + n.p + ' ' + n.b).toLowerCase());
 const topFolder = f => f.split('/').slice(0, 2).join('/');
 
 // Filter state.
-const S = { q: '', folders: new Set(), types: new Set(), key: '', val: '', propLinks: true, orphans: true, local: null, labels: false };
+const S = { q: '', folders: new Set(), types: new Set(), key: '', val: '', hidden: new Set(V.hide || []), orphans: true, local: null, labels: false };
 const folders = {}, types = {}, keys = {};
 N.forEach(n => {
   const f = n.f.split('/');
@@ -153,7 +155,7 @@ function localSet(c, depth) {
   const seen = new Set([c]); let ring = [c];
   for (let d = 0; d < depth; d++) {
     const next = [];
-    ring.forEach(i => out[i].concat(inc[i]).forEach(([j, k]) => { if ((S.propLinks || k === 'body') && !seen.has(j)) { seen.add(j); next.push(j); } }));
+    ring.forEach(i => out[i].concat(inc[i]).forEach(([j, k]) => { if (!S.hidden.has(k) && !seen.has(j)) { seen.add(j); next.push(j); } }));
     ring = next;
   }
   return seen;
@@ -208,7 +210,11 @@ new MutationObserver(() => { readColors(); redraw(); }).observe(document.documen
 function apply() {
   let keep = N.map((_, i) => passes(i));
   if (S.local !== null) { const L = localSet(S.local, 2); keep = keep.map((v, i) => v && L.has(i) || i === S.local); }
-  const links = V.links.filter(([s, t, k]) => keep[s] && keep[t] && (S.propLinks || k === 'body')).map(([s, t, k]) => ({ source: s, target: t, k }));
+  const links = V.links.filter(([s, t, k]) => keep[s] && keep[t] && !S.hidden.has(k)).map(([s, t, k]) => ({ source: s, target: t, k }));
+  // Size by backlinks among the links on screen: distinct notes that point here.
+  const cites = nodes.map(() => new Set());
+  links.forEach(l => cites[l.target].add(l.source));
+  nodes.forEach((n, i) => n.deg = cites[i].size);
   if (!S.orphans) { const linked = new Set(links.flatMap(l => [l.source, l.target])); keep = keep.map((v, i) => v && (linked.has(i) || i === sel)); }
   const shown = nodes.filter((_, i) => keep[i]);
   tree.querySelectorAll('.file').forEach(b => b.classList.toggle('out', !keep[+b.dataset.i]));
@@ -230,9 +236,10 @@ function renderFilters() {
     ${kk.length ? `<h3 class="sc">Property</h3>
       <div class="row"><select id="pk" aria-label="Property"><option value="">Any property</option>${kk.map(k => `<option ${k === S.key ? 'selected' : ''} value="${esc(k)}">${esc(k)} (${keys[k]})</option>`).join('')}</select></div>
       ${S.key ? `<div class="row"><select id="pv" aria-label="Value"><option value="">Any value</option>${vals.slice(0, 500).map(v => `<option ${v === S.val ? 'selected' : ''} value="${esc(v)}">${esc(v.length > 60 ? v.slice(0, 58) + '…' : v)}</option>`).join('')}</select></div>` : ''}` : ''}
+    <h3 class="sc">Links</h3>
+    <div class="chips">${Object.keys(kinds).sort((a, b) => (a !== 'body') - (b !== 'body') || a.localeCompare(b)).map(k => `<button class="chip" data-k="${esc(k)}" aria-pressed="${!S.hidden.has(k)}">${k === 'body' ? 'in text' : esc(k)}<small>${kinds[k]}</small></button>`).join('')}</div>
     <h3 class="sc">Show</h3>
     <div class="chips">
-      <button class="chip" data-t="propLinks" aria-pressed="${S.propLinks}">Property links, dashed</button>
       <button class="chip" data-t="orphans" aria-pressed="${S.orphans}">Unlinked notes</button>
     </div>
     <div class="foot"><button class="btn sc" id="reset">Clear filters</button><button class="btn sc" id="fclose">Done</button></div>`;
@@ -242,6 +249,7 @@ $('#filters').addEventListener('click', e => {
   if (b.id === 'fclose') return toggleFilters(false);
   if (b.id === 'reset') { S.folders.clear(); S.types.clear(); S.key = S.val = ''; S.q = ''; $('#q').value = ''; S.local = null; }
   else if (b.dataset.g) { const set = S[b.dataset.g], v = b.dataset.v; set.has(v) ? set.delete(v) : set.add(v); }
+  else if (b.dataset.k) { const k = b.dataset.k; S.hidden.has(k) ? S.hidden.delete(k) : S.hidden.add(k); }
   else if (b.dataset.t) S[b.dataset.t] = !S[b.dataset.t];
   renderFilters(); apply();
 });

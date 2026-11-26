@@ -14,6 +14,7 @@ The page is a snapshot of an Obsidian vault: a force-directed graph of every not
    ```bash
    python3 build.py VAULT -o vault.html --title "Name" [--exclude "archive/*" ...]
    ```
+   It skips what Obsidian skips: the folders in Settings › Files and links › Excluded files and the templates folder, both read from `.obsidian/`. `--hide-links up` starts a property's links hidden (the Links filter can show them); use it for a property every note carries, such as a parent map, which otherwise lays a tree over the real graph.
    It prints notes, links and size. Over about 15 MB, exclude bulky folders (source dumps, archives) with `--exclude`.
 3. **Publish.** Publish `vault.html` with the Artifact tool, icon `graph`. To refresh a page published in an earlier conversation, find its URL with `action: "list"` (the title is the `--title` value), read it, and publish with that `url` so the link stays the same.
 4. **Check once.** Note the counts in the reply: notes, links, unresolved links if many.
@@ -39,6 +40,6 @@ Text panels follow carovision: Times body (Tinos as the web fallback), Libre Bod
 - Read-only: the page never edits notes, and says nothing about saving.
 - Keep the page self-contained: data inline, libraries from jsDelivr pinned to exact versions (force-graph, marked, DOMPurify).
 - Note bodies are sanitised with DOMPurify before rendering; external links open in a new tab.
-- Tested at 2,000 notes and 7,000 links: 60 fps on a phone-sized viewport.
+- Tested on a 363-note vault with 1,088 links and at 2,000 notes and 7,000 links: 60 fps on a phone-sized viewport.
 
 Requires Python 3.9+ and PyYAML.

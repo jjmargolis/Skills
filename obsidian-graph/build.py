@@ -2,7 +2,7 @@
 """Compile an Obsidian vault into one read-only HTML page: a force-directed
 graph of its notes with filters and a reader for each note.
 
-    python3 build.py VAULT -o vault.html [--title NAME] [--exclude GLOB ...]
+    python3 build.py VAULT -o vault.html [--title NAME] [--exclude GLOB ...] [--hide-links PROPERTY ...]
 
 Notes are the vault's .md files. Edges come from [[wikilinks]] and relative
 markdown links in the body (kind "body") and from [[wikilinks]] inside
@@ -22,14 +22,40 @@ MDLINK = re.compile(r"(!?)\[([^\]]*)\]\(<?([^)\s>]+)>?(?:\s+\"[^\"]*\")?\)")
 H1 = re.compile(r"^#[ \t]+(.+?)[ \t#]*$", re.M)
 
 
+def obsidian_ignores(vault):
+    """Paths Obsidian itself leaves out: Excluded files (app.json) and the templates folder."""
+    def load(name):
+        try:
+            with open(os.path.join(vault, ".obsidian", name), encoding="utf-8") as fh:
+                return json.load(fh)
+        except (OSError, ValueError):
+            return {}
+    rules = list(load("app.json").get("userIgnoreFilters", []))
+    folder = load("templates.json").get("folder")
+    if folder:
+        rules.append(folder.strip("/") + "/")
+    return rules
+
+
+def ignored(rel, rules):
+    for r in rules:
+        if len(r) > 2 and r.startswith("/") and r.endswith("/"):
+            if re.search(r[1:-1], rel):
+                return True
+        elif rel == r or rel.startswith(r if r.endswith("/") else r + "/"):
+            return True
+    return False
+
+
 def scan(vault, excludes):
     """Yield vault-relative POSIX paths of every note."""
+    rules = obsidian_ignores(vault)
     for root, dirs, files in os.walk(vault):
         dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS and not d.startswith("."))
         for f in sorted(files):
             if f.lower().endswith(".md"):
                 rel = os.path.relpath(os.path.join(root, f), vault).replace(os.sep, "/")
-                if not any(fnmatch.fnmatch(rel, g) for g in excludes):
+                if not ignored(rel, rules) and not any(fnmatch.fnmatch(rel, g) for g in excludes):
                     yield rel
 
 
@@ -204,10 +230,13 @@ def main():
     ap.add_argument("vault")
     ap.add_argument("-o", "--out", required=True)
     ap.add_argument("--title", help="page title (default: the vault folder's name)")
+    ap.add_argument("--hide-links", action="append", default=[], metavar="PROPERTY",
+                    help="property whose links start hidden (the viewer can show them); repeatable")
     ap.add_argument("--exclude", action="append", default=[], help="glob on vault-relative paths; repeatable")
     a = ap.parse_args()
     vault = os.path.abspath(a.vault)
     data = build(vault, a.exclude)
+    data["hide"] = a.hide_links
     title = a.title or os.path.basename(vault.rstrip("/"))
     blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     template = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "viewer.html"), encoding="utf-8").read()
